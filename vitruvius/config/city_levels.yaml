@@ -1,1 +1,37 @@
 # Niveaux de ville et conditions de victoire (camp → village → bourg → ville → Nova Roma)
+
+city_levels:
+  - level: 1
+    id: "camp"
+    display_name: "Campement"
+    min_population: 50
+    min_satisfaction: 0.30
+    required_buildings: []
+
+  - level: 2
+    id: "village"
+    display_name: "Village"
+    min_population: 200
+    min_satisfaction: 0.40
+    required_buildings: ["forum"]
+
+  - level: 3
+    id: "town"
+    display_name: "Bourg"
+    min_population: 500
+    min_satisfaction: 0.50
+    required_buildings: ["temple"]
+
+  - level: 4
+    id: "city"
+    display_name: "Ville"
+    min_population: 1500
+    min_satisfaction: 0.60
+    required_buildings: ["market", "theater", "baths"]
+
+  - level: 5
+    id: "nova_roma"
+    display_name: "Nova Roma"
+    min_population: 2500
+    min_satisfaction: 0.65
+    required_buildings: ["obelisk", "prefecture"]

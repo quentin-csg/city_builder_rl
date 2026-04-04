@@ -1,1 +1,26 @@
 # Données des ressources (stocks initiaux, capacités de stockage)
+
+resources:
+  denarii:
+    display_name: "Denarii"
+    starting_amount: 800
+    storage_building: null
+    max_storage: null
+  wheat:
+    display_name: "Blé"
+    starting_amount: 200
+    storage_building: "granary"
+    max_storage: 2400
+  wood:
+    display_name: "Bois"
+    starting_amount: 100
+    storage_building: "warehouse_wood"
+    max_storage: 3200
+  marble:
+    display_name: "Marbre"
+    starting_amount: 0
+    storage_building: "warehouse_marble"
+    max_storage: 3200
+
+passive_income:
+  denarii: 10

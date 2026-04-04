@@ -1,1 +1,42 @@
 # Données des événements (probabilités, durées, effets)
+
+events:
+  fire:
+    display_name: "Incendie"
+    probability: 0.03
+    duration: 1
+    effect:
+      type: "destroy_building"
+      count: 1
+      immune_unique: true
+    prevention:
+      building: "prefecture"
+      risk_divisor: 2
+
+  drought:
+    display_name: "Sécheresse"
+    probability: 0.02
+    duration: 3
+    effect:
+      type: "farm_modifier"
+      modifier: -0.5
+    prevention: null
+
+  good_harvest:
+    display_name: "Bonne récolte"
+    probability: 0.05
+    duration: 1
+    effect:
+      type: "farm_modifier"
+      modifier: 0.5
+    prevention: null
+
+  immigration:
+    display_name: "Immigration"
+    probability: 0.04
+    duration: 1
+    effect:
+      type: "add_population"
+      min_amount: 50
+      max_amount: 150
+    prevention: null

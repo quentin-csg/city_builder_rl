@@ -1,1 +1,44 @@
 # Besoins par niveau de maison (water, food, religion, hygiene, entertainment, security)
+
+house_levels:
+  - level: 1
+    id: "tent"
+    display_name: "Tente"
+    max_population: 5
+    required_needs: ["water"]
+    tax_per_inhabitant: 0.2
+
+  - level: 2
+    id: "hut"
+    display_name: "Hutte"
+    max_population: 10
+    required_needs: ["water", "food"]
+    tax_per_inhabitant: 0.3
+
+  - level: 3
+    id: "casa"
+    display_name: "Casa"
+    max_population: 20
+    required_needs: ["water", "food", "religion"]
+    tax_per_inhabitant: 0.3
+
+  - level: 4
+    id: "insula_1"
+    display_name: "Insula I"
+    max_population: 35
+    required_needs: ["water", "food", "religion", "hygiene"]
+    tax_per_inhabitant: 0.35
+
+  - level: 5
+    id: "insula_2"
+    display_name: "Insula II"
+    max_population: 50
+    required_needs: ["water", "food", "religion", "hygiene", "entertainment"]
+    tax_per_inhabitant: 0.4
+
+  - level: 6
+    id: "insula_3"
+    display_name: "Insula III"
+    max_population: 70
+    required_needs: ["water", "food", "religion", "hygiene", "entertainment", "security"]
+    tax_per_inhabitant: 0.5

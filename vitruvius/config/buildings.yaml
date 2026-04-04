@@ -1,1 +1,326 @@
-# Données de tous les bâtiments — voir CLAUDE.md pour les spécifications complètes
+# Données de tous les bâtiments
+
+buildings:
+  road:
+    display_name: "Route"
+    category: "infrastructure"
+    size: [1, 1]
+    cost:
+      denarii: 2
+    maintenance: 0
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage: null
+    service: null
+    special_effect: null
+
+  well:
+    display_name: "Puits"
+    category: "infrastructure"
+    size: [1, 1]
+    cost:
+      denarii: 50
+    maintenance: 3
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage: null
+    service:
+      type: "water"
+      radius: 3
+    special_effect: null
+
+  fountain:
+    display_name: "Fontaine"
+    category: "infrastructure"
+    size: [1, 1]
+    cost:
+      denarii: 100
+    maintenance: 5
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage: null
+    service:
+      type: "water"
+      radius: 6
+    special_effect:
+      requires_aqueduct: true
+
+  aqueduct:
+    display_name: "Aqueduc"
+    category: "infrastructure"
+    size: [1, 1]
+    cost:
+      denarii: 30
+    maintenance: 2
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage: null
+    service: null
+    special_effect:
+      is_aqueduct: true
+
+  housing:
+    display_name: "Terrain constructible"
+    category: "infrastructure"
+    size: [2, 2]
+    cost:
+      wood: 10
+    maintenance: 0
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage: null
+    service: null
+    special_effect:
+      is_housing: true
+
+  wheat_farm:
+    display_name: "Ferme de blé"
+    category: "production"
+    size: [3, 3]
+    cost:
+      denarii: 200
+    maintenance: 10
+    unique: false
+    terrain_constraint:
+      type: "all_tiles"
+      terrain: "plain"
+    production:
+      resource: "wheat"
+      amount: 12
+    storage: null
+    service: null
+    special_effect: null
+
+  lumber_camp:
+    display_name: "Camp de bûcherons"
+    category: "production"
+    size: [2, 2]
+    cost:
+      denarii: 150
+    maintenance: 8
+    unique: false
+    terrain_constraint:
+      type: "adjacent"
+      terrain: "forest"
+    production:
+      resource: "wood"
+      amount: 8
+    storage: null
+    service: null
+    special_effect: null
+
+  marble_quarry:
+    display_name: "Carrière de marbre"
+    category: "production"
+    size: [3, 3]
+    cost:
+      denarii: 400
+    maintenance: 20
+    unique: false
+    terrain_constraint:
+      type: "all_tiles"
+      terrain: "hill"
+    production:
+      resource: "marble"
+      amount: 6
+    storage: null
+    service: null
+    special_effect: null
+
+  granary:
+    display_name: "Grenier"
+    category: "production"
+    size: [3, 3]
+    cost:
+      denarii: 300
+    maintenance: 15
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage:
+      resource: "wheat"
+      capacity: 2400
+    service: null
+    special_effect: null
+
+  market:
+    display_name: "Marché"
+    category: "production"
+    size: [2, 2]
+    cost:
+      denarii: 150
+    maintenance: 8
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage: null
+    service:
+      type: "food"
+      radius: 8
+    special_effect: null
+
+  small_altar:
+    display_name: "Petit autel"
+    category: "service"
+    size: [1, 1]
+    cost:
+      denarii: 50
+    maintenance: 3
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage: null
+    service:
+      type: "religion"
+      radius: 3
+    special_effect: null
+
+  temple:
+    display_name: "Temple"
+    category: "service"
+    size: [3, 3]
+    cost:
+      denarii: 800
+      marble: 100
+    maintenance: 40
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage: null
+    service:
+      type: "religion"
+      radius: 8
+    special_effect: null
+
+  baths:
+    display_name: "Thermes"
+    category: "service"
+    size: [3, 3]
+    cost:
+      denarii: 600
+    maintenance: 30
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage: null
+    service:
+      type: "hygiene"
+      radius: 8
+    special_effect: null
+
+  theater:
+    display_name: "Théâtre"
+    category: "service"
+    size: [3, 3]
+    cost:
+      denarii: 500
+    maintenance: 25
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage: null
+    service:
+      type: "entertainment"
+      radius: 8
+    special_effect: null
+
+  forum:
+    display_name: "Forum"
+    category: "admin"
+    size: [4, 4]
+    cost:
+      denarii: 2000
+      marble: 200
+    maintenance: 100
+    unique: true
+    terrain_constraint: null
+    production: null
+    storage: null
+    service: null
+    special_effect:
+      tax_bonus: 0.15
+
+  prefecture:
+    display_name: "Préfecture"
+    category: "admin"
+    size: [2, 2]
+    cost:
+      denarii: 250
+    maintenance: 13
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage: null
+    service:
+      type: "security"
+      radius: 10
+    special_effect:
+      fire_risk_divisor: 2
+
+  trading_post:
+    display_name: "Comptoir"
+    category: "commerce"
+    size: [2, 2]
+    cost:
+      denarii: 300
+    maintenance: 15
+    unique: false
+    terrain_constraint: null
+    production:
+      resource: "denarii"
+      amount: 50
+    storage: null
+    service: null
+    special_effect: null
+
+  warehouse_wood:
+    display_name: "Entrepôt à bois"
+    category: "storage"
+    size: [3, 3]
+    cost:
+      denarii: 400
+    maintenance: 20
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage:
+      resource: "wood"
+      capacity: 3200
+    service: null
+    special_effect: null
+
+  warehouse_marble:
+    display_name: "Entrepôt à marbre"
+    category: "storage"
+    size: [3, 3]
+    cost:
+      denarii: 400
+    maintenance: 20
+    unique: false
+    terrain_constraint: null
+    production: null
+    storage:
+      resource: "marble"
+      capacity: 3200
+    service: null
+    special_effect: null
+
+  obelisk:
+    display_name: "Obélisque"
+    category: "monument"
+    size: [1, 1]
+    cost:
+      denarii: 1000
+      marble: 500
+    maintenance: 50
+    unique: true
+    terrain_constraint: null
+    production: null
+    storage: null
+    service: null
+    special_effect: null
