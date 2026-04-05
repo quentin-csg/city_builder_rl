@@ -213,6 +213,33 @@ def test_prod_marble_quarry_without_warehouse(bldg, res_cfg):
     assert state.marble == 0
 
 
+def test_prod_farm_modifier_positive(bldg, res_cfg):
+    # wheat_farm produit 12/tour ; farm_modifier=+0.5 → floor(12 * 1.5) = 18
+    state = ResourceState(denarii=800.0, wheat=0, wood=0, marble=0)
+    placed = _placed("wheat_farm", "granary")
+    result = apply_production(state, placed, bldg, res_cfg, farm_modifier=0.5)
+    assert state.wheat == 18
+    assert result.get("wheat", 0) == 18
+
+
+def test_prod_farm_modifier_negative(bldg, res_cfg):
+    # farm_modifier=-0.5 (sécheresse) → floor(12 * 0.5) = 6
+    state = ResourceState(denarii=800.0, wheat=0, wood=0, marble=0)
+    placed = _placed("wheat_farm", "granary")
+    result = apply_production(state, placed, bldg, res_cfg, farm_modifier=-0.5)
+    assert state.wheat == 6
+    assert result.get("wheat", 0) == 6
+
+
+def test_prod_farm_modifier_no_effect_on_denarii(bldg, res_cfg):
+    # farm_modifier ne touche pas denarii (trading_post)
+    state = ResourceState(denarii=100.0, wheat=0, wood=0, marble=0)
+    placed = _placed("trading_post")
+    result = apply_production(state, placed, bldg, res_cfg, farm_modifier=0.5)
+    assert state.denarii == 150.0  # 100 + 50, inchangé par le modifier
+    assert result.get("denarii", 0) == 50
+
+
 # ---------------------------------------------------------------------------
 # apply_passive_income
 # ---------------------------------------------------------------------------

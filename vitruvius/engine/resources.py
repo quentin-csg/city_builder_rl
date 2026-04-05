@@ -126,6 +126,7 @@ def apply_production(
     placed_buildings: dict[tuple[int, int], PlacedBuilding],
     building_configs: dict[str, BuildingConfig],
     resources_config: ResourcesConfig,
+    farm_modifier: float = 0.0,
 ) -> dict[str, int]:
     """Applique la production de tous les bâtiments producteurs.
 
@@ -138,6 +139,9 @@ def apply_production(
         placed_buildings: Bâtiments posés sur la grille.
         building_configs: Configs des bâtiments.
         resources_config: Config des ressources (pour connaître le storage_building requis).
+        farm_modifier: Modificateur multiplicatif sur la production de blé.
+            Appliqué uniquement au blé : max(0, floor(amount * (1 + farm_modifier))).
+            Valeur 0.0 = aucun effet.
 
     Returns:
         Dict {resource_key: montant_effectivement_ajouté}.
@@ -160,6 +164,10 @@ def apply_production(
 
         resource = cfg.production.resource
         amount = cfg.production.amount
+
+        # Modificateur sécheresse/bonne récolte sur le blé uniquement
+        if resource == "wheat" and farm_modifier != 0.0:
+            amount = max(0, math.floor(amount * (1 + farm_modifier)))
 
         # Vérification : stockage requis pour les ressources non-denarii (O(1))
         if resources_config.resources[resource].storage_building is not None:
