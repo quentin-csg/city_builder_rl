@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 
 from vitruvius.engine.buildings import BuildingConfig
@@ -35,11 +36,20 @@ class Grid:
     def __init__(self, seed: int = 42) -> None:
         self.seed = seed
         self.terrain: list[list[TerrainType]] = generate_terrain(self.SIZE, seed)
+        # Cache des tiles WATER (terrain fixe) — évite un scan O(SIZE²) répété
+        self.water_tiles: frozenset[tuple[int, int]] = frozenset(
+            (x, y)
+            for y in range(self.SIZE)
+            for x in range(self.SIZE)
+            if self.terrain[y][x] == TerrainType.WATER
+        )
         # Chaque case stocke (ox, oy) du coin haut-gauche du bâtiment, ou None
         self._origin: list[list[tuple[int, int] | None]] = [
             [None] * self.SIZE for _ in range(self.SIZE)
         ]
         self.placed_buildings: dict[tuple[int, int], PlacedBuilding] = {}
+        # Index building_id → nombre d'instances posées (O(1) pour unicité)
+        self._placed_ids: Counter[str] = Counter()
 
     # ------------------------------------------------------------------
     # Lecture
@@ -115,10 +125,8 @@ class Grid:
                     return False
 
         # 4. Unicité
-        if config.unique:
-            for pb in self.placed_buildings.values():
-                if pb.building_id == building_id:
-                    return False
+        if config.unique and building_id in self._placed_ids:
+            return False
 
         return True
 
@@ -131,6 +139,7 @@ class Grid:
         w, h = config.size
         pb = PlacedBuilding(building_id=building_id, x=x, y=y, size=config.size)
         self.placed_buildings[(x, y)] = pb
+        self._placed_ids[building_id] += 1
         for dy in range(h):
             for dx in range(w):
                 self._origin[y + dy][x + dx] = (x, y)
@@ -145,6 +154,9 @@ class Grid:
         if origin is None:
             return None
         pb = self.placed_buildings.pop(origin)
+        self._placed_ids[pb.building_id] -= 1
+        if self._placed_ids[pb.building_id] == 0:
+            del self._placed_ids[pb.building_id]
         ox, oy = origin
         w, h = pb.size
         for dy in range(h):

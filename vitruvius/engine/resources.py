@@ -142,6 +142,15 @@ def apply_production(
     Returns:
         Dict {resource_key: montant_effectivement_ajouté}.
     """
+    # Précalcul unique des capacités de stockage : évite O(N×M) → O(N+M)
+    # storage_caps[r] = capacité totale pour la ressource r (absent = 0 = pas de stockage)
+    storage_caps: dict[str, int] = {}
+    for pb in placed_buildings.values():
+        cfg = building_configs[pb.building_id]
+        if cfg.storage is not None:
+            r = cfg.storage.resource
+            storage_caps[r] = storage_caps.get(r, 0) + cfg.storage.capacity
+
     produced: dict[str, int] = {}
 
     for pb in placed_buildings.values():
@@ -152,19 +161,14 @@ def apply_production(
         resource = cfg.production.resource
         amount = cfg.production.amount
 
-        # Vérification : stockage requis pour les ressources non-denarii
-        storage_building = resources_config.resources[resource].storage_building
-        if storage_building is not None:
-            has_storage = any(
-                building_configs[pb2.building_id].storage is not None
-                and building_configs[pb2.building_id].storage.resource == resource
-                for pb2 in placed_buildings.values()
-            )
-            if not has_storage:
+        # Vérification : stockage requis pour les ressources non-denarii (O(1))
+        if resources_config.resources[resource].storage_building is not None:
+            if storage_caps.get(resource, 0) == 0:
                 produced.setdefault(resource, 0)
                 continue
 
-        cap = compute_storage_cap(resource, placed_buildings, building_configs)
+        # cap = None pour denarii (absent de storage_caps) → illimité
+        cap = storage_caps.get(resource)
         current = get_stock(state, resource)
 
         if cap is None:
@@ -273,3 +277,45 @@ def pay_cost(state: ResourceState, cost: dict[str, int]) -> None:
     """Déduit le coût d'un bâtiment des stocks. Suppose can_afford() == True."""
     for resource, amount in cost.items():
         set_stock(state, resource, get_stock(state, resource) - amount)
+
+
+def refund_cost(state: ResourceState, cost: dict[str, int], ratio: float = 0.5) -> None:
+    """Rembourse une fraction (floor) du coût d'un bâtiment démoli.
+
+    Args:
+        state: État des ressources à modifier.
+        cost: Coût original du bâtiment (dict {resource_key: montant}).
+        ratio: Fraction remboursée. Défaut 0.5 (50%).
+    """
+    for resource, amount in cost.items():
+        refund = math.floor(amount * ratio)
+        set_stock(state, resource, get_stock(state, resource) + refund)
+
+
+def clamp_stocks_to_capacity(
+    state: ResourceState,
+    placed_buildings: dict[tuple[int, int], PlacedBuilding],
+    building_configs: dict[str, BuildingConfig],
+) -> dict[str, int]:
+    """Réduit les stocks aux capacités de stockage actuelles (après démolition d'un entrepôt).
+
+    Denarii n'est jamais limité. Les ressources physiques (blé, bois, marbre) sont
+    capées par la capacité totale des bâtiments de stockage encore présents.
+
+    Args:
+        state: État des ressources à modifier.
+        placed_buildings: Bâtiments actuellement sur la grille (après démolition).
+        building_configs: Configs des bâtiments.
+
+    Returns:
+        Dict {resource_key: montant_perdu} pour les ressources qui ont été réduites.
+    """
+    lost: dict[str, int] = {}
+    for key in _RESOURCE_KEYS - {"denarii"}:
+        cap = compute_storage_cap(key, placed_buildings, building_configs)
+        if cap is not None:
+            current = get_stock(state, key)
+            if current > cap:
+                lost[key] = int(current - cap)
+                set_stock(state, key, cap)
+    return lost
