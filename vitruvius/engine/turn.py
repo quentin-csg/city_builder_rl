@@ -199,6 +199,9 @@ def step(game_state: GameState, config: GameConfig, action: Action) -> TurnResul
     # ------------------------------------------------------------------
     # Étape 9 : Évolution / Régression des maisons
     # ------------------------------------------------------------------
+    # Capturé avant régression : une maison level≥1 qui régresserait à 0
+    # doit quand même déclencher la défaite si pop=0.
+    had_inhabited_housing = any(h.level >= 1 for h in gs.houses.values())
     evolved, regressed = evolve_houses(gs.houses, coverage, house_levels)
 
     # ------------------------------------------------------------------
@@ -235,7 +238,8 @@ def step(game_state: GameState, config: GameConfig, action: Action) -> TurnResul
     )
     gs.city_level = city_level
 
-    defeat = check_defeat(total_pop, gs.consecutive_bankrupt_turns, has_housing=len(gs.houses) > 0)
+    has_inhabited_housing = had_inhabited_housing or any(h.level >= 1 for h in gs.houses.values())
+    defeat = check_defeat(total_pop, gs.consecutive_bankrupt_turns, has_housing=has_inhabited_housing)
     victory_flag = city_level >= 5
 
     gs.done = defeat or victory_flag
