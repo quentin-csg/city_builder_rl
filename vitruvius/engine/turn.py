@@ -80,6 +80,7 @@ class TurnResult:
     victory: bool
     defeat: bool
     bankrupt: bool            # denarii < -500 après étape 4
+    action_succeeded: bool = True  # False si place/demolish a échoué (ressources, terrain, etc.)
 
 
 # ---------------------------------------------------------------------------
@@ -105,10 +106,12 @@ def step(game_state: GameState, config: GameConfig, action: Action) -> TurnResul
     # ------------------------------------------------------------------
     # Étape 1-2 : Action
     # ------------------------------------------------------------------
+    action_succeeded = True
     if action.type == "place" and action.building_id is not None:
         success = try_place_building(
             gs.grid, gs.resource_state, action.building_id, action.x, action.y, bldg
         )
+        action_succeeded = success
         if success:
             cfg = bldg[action.building_id]
             if cfg.special_effect is not None and cfg.special_effect.is_housing:
@@ -121,6 +124,7 @@ def step(game_state: GameState, config: GameConfig, action: Action) -> TurnResul
         demolished = try_demolish(
             gs.grid, gs.resource_state, action.x, action.y, bldg
         )
+        action_succeeded = demolished is not None
         if demolished is not None:
             cfg = bldg[demolished.building_id]
             if cfg.special_effect is not None and cfg.special_effect.is_housing:
@@ -270,4 +274,5 @@ def step(game_state: GameState, config: GameConfig, action: Action) -> TurnResul
         victory=victory_flag,
         defeat=defeat,
         bankrupt=bankrupt,
+        action_succeeded=action_succeeded,
     )

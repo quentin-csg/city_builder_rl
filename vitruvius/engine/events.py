@@ -158,8 +158,12 @@ def _apply_fire(
                 return None  # fizzle
 
     # Destruction sans remboursement
+    destroyed_cfg = building_configs[bid]
     grid.remove_building(ox, oy)
-    clamp_stocks_to_capacity(resource_state, grid.placed_buildings, building_configs)
+    # Clamp uniquement si le bâtiment détruit avait du stockage — sinon, cap==0
+    # zérerait des ressources qui n'étaient pas stockées dans ce bâtiment.
+    if destroyed_cfg.storage is not None:
+        clamp_stocks_to_capacity(resource_state, grid.placed_buildings, building_configs)
 
     return ActiveEvent(
         event_type="fire",

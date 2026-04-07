@@ -141,8 +141,11 @@ def try_demolish(
     pb = grid.remove_building(x, y)
     if pb is None:
         return None
-    # Clamp d'abord : perte de l'excédent si un entrepôt/grenier vient d'être démoli
-    clamp_stocks_to_capacity(state, grid.placed_buildings, building_configs)
+    # Clamp uniquement si le bâtiment démoli avait du stockage — sinon cap==0
+    # zérerait des ressources indépendantes de ce bâtiment.
+    demolished_cfg = building_configs[pb.building_id]
+    if demolished_cfg.storage is not None:
+        clamp_stocks_to_capacity(state, grid.placed_buildings, building_configs)
     # Remboursement ensuite : toujours reçu, indépendamment de la capacité
     refund_cost(state, building_configs[pb.building_id].cost)
     return pb

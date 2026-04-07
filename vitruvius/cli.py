@@ -153,6 +153,9 @@ def format_turn_result(r: TurnResult) -> str:
     """
     parts: list[str] = []
 
+    if not r.action_succeeded:
+        parts.append("Action impossible (ressources insuffisantes, terrain invalide ou case occupée)")
+
     if r.production:
         prod_str = ", ".join(f"+{v} {k}" for k, v in r.production.items() if v > 0)
         if prod_str:
