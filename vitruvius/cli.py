@@ -10,8 +10,8 @@ Commandes :
     inspect <x> <y>      (alias: x)   Inspecter la case (terrain, bâtiment, couverture)
     list                 (alias: ls)  Lister les bâtiments disponibles
     info <id>            (alias: i)   Détails d'un bâtiment
-    save <fichier>                    Sauvegarder la partie (JSON)
-    load <fichier>                    Charger une partie (JSON)
+    save <fichier>                    Sauvegarder dans saves/<fichier>
+    load <fichier>                    Charger depuis saves/<fichier>
     help                 (alias: h ?) Afficher cette aide
     quit                 (alias: q)   Quitter
 """
@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from vitruvius.config import load_config
@@ -473,8 +474,10 @@ def play(seed: int = 42) -> None:
                 print(format_building_info(bid, config))
             continue
         if isinstance(result, str) and result.startswith("save:"):
-            filepath = result[5:]
+            name = result[5:]
+            filepath = Path(name) if Path(name).is_absolute() else Path("saves") / name
             try:
+                filepath.parent.mkdir(parents=True, exist_ok=True)
                 with open(filepath, "w", encoding="utf-8") as f:
                     json.dump(to_dict(gs), f, indent=2)
                 print(f"Partie sauvegardée : {filepath}")
@@ -482,7 +485,8 @@ def play(seed: int = 42) -> None:
                 print(f"Erreur de sauvegarde : {e}")
             continue
         if isinstance(result, str) and result.startswith("load:"):
-            filepath = result[5:]
+            name = result[5:]
+            filepath = Path(name) if Path(name).is_absolute() else Path("saves") / name
             try:
                 with open(filepath, encoding="utf-8") as f:
                     data = json.load(f)
