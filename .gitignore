@@ -8,6 +8,7 @@ venv/
 env/
 claude.md
 .claude
+saves/
 
 .pytest_cache/
 .coverage
