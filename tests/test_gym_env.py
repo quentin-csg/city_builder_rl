@@ -81,10 +81,29 @@ def test_env_step_do_nothing_advances_turn(env):
     assert env.gs.turn == turn_before + 1
 
 
-def test_env_step_reward_placeholder(env):
+def test_env_step_reward_survival(env):
+    """DO_NOTHING sur état stable (grille vide, pop=0) → deltas=0, reward=0.01."""
     _, reward, terminated, truncated, _ = env.step(DO_NOTHING)
     if not terminated:
-        assert reward == pytest.approx(0.01)
+        assert reward == pytest.approx(0.01, abs=1e-6)
+
+
+def test_env_reward_determinism(cfg):
+    """Même seed + même séquence d'actions → même séquence de rewards."""
+    def run(seed: int) -> list[float]:
+        e = VitruviusEnv(config=cfg, seed=seed, max_turns=10)
+        e.reset()
+        rewards = []
+        for _ in range(5):
+            _, r, term, trunc, _ = e.step(DO_NOTHING)
+            rewards.append(r)
+            if term or trunc:
+                break
+        return rewards
+
+    r1 = run(42)
+    r2 = run(42)
+    assert r1 == pytest.approx(r2, abs=1e-6)
 
 
 # ---------------------------------------------------------------------------

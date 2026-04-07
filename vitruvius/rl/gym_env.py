@@ -16,9 +16,9 @@ from vitruvius.engine.actions import (
     get_building_order,
 )
 from vitruvius.engine.game_state import GameState, init_game_state
-from vitruvius.engine.turn import TurnResult
 from vitruvius.engine.turn import step as engine_step
 from vitruvius.rl.observation import build_observation
+from vitruvius.rl.reward import RewardState, compute_reward
 
 from typing import TYPE_CHECKING
 
@@ -68,6 +68,7 @@ class VitruviusEnv(gym.Env):
             "wheat_conso_ratio": 0.0,
             "net_income": 0.0,
         }
+        self._prev_reward_state: RewardState | None = None
 
     # ------------------------------------------------------------------
     # Gymnasium API
@@ -96,6 +97,7 @@ class VitruviusEnv(gym.Env):
             "wheat_conso_ratio": 0.0,
             "net_income": 0.0,
         }
+        self._prev_reward_state = self._snapshot_reward_state()
         obs = build_observation(
             self.gs, self.config, self.building_index_map, self._last_dynamics
         )
@@ -145,7 +147,9 @@ class VitruviusEnv(gym.Env):
         obs = build_observation(
             self.gs, self.config, self.building_index_map, self._last_dynamics
         )
-        reward = self._compute_reward(result)
+        curr_state = self._snapshot_reward_state()
+        reward = compute_reward(self._prev_reward_state, curr_state, result)
+        self._prev_reward_state = curr_state
         terminated = bool(result.done)
         truncated = bool(self.gs.turn >= self.max_turns)
 
@@ -169,12 +173,14 @@ class VitruviusEnv(gym.Env):
         return compute_action_mask(self.gs, self.config, self.building_list)
 
     # ------------------------------------------------------------------
-    # Reward (placeholder étape 12 — shaping complet à l'étape 13)
+    # Helpers
     # ------------------------------------------------------------------
 
-    def _compute_reward(self, result: TurnResult) -> float:
-        if result.victory:
-            return 100.0
-        if result.defeat:
-            return -10.0
-        return 0.01
+    def _snapshot_reward_state(self) -> RewardState:
+        """Capture un snapshot des métriques pour le calcul du reward delta."""
+        return RewardState(
+            total_population=sum(h.population for h in self.gs.houses.values()),
+            city_level=self.gs.city_level,
+            global_satisfaction=self.gs.global_satisfaction,
+            housing_sum=sum(h.level for h in self.gs.houses.values()),
+        )
