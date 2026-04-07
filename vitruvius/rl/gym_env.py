@@ -1,1 +1,180 @@
 """Wrapper Gymnasium standard : reset, step, observation space, action space."""
+
+from __future__ import annotations
+
+import math
+
+import numpy as np
+import gymnasium as gym
+from gymnasium import spaces
+
+from vitruvius.config import load_config
+from vitruvius.engine.actions import (
+    TOTAL_ACTIONS,
+    compute_action_mask,
+    decode_action,
+    get_building_order,
+)
+from vitruvius.engine.game_state import GameState, init_game_state
+from vitruvius.engine.turn import TurnResult
+from vitruvius.engine.turn import step as engine_step
+from vitruvius.rl.observation import build_observation
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from vitruvius.config import GameConfig
+
+
+class VitruviusEnv(gym.Env):
+    """Environnement Gymnasium pour le city builder Nova Roma.
+
+    Compatible MaskablePPO (sb3-contrib) via `action_masks()`.
+
+    Args:
+        config: Configuration du jeu. Si None, charge via load_config().
+        seed: Seed RNG pour la génération du terrain. None = aléatoire.
+        max_turns: Nombre de tours avant truncation (défaut 1000).
+    """
+
+    metadata: dict = {"render_modes": []}
+
+    def __init__(
+        self,
+        config: GameConfig | None = None,
+        seed: int | None = None,
+        max_turns: int = 1000,
+    ) -> None:
+        super().__init__()
+        self.config = config or load_config()
+        self._seed = seed
+        self.max_turns = max_turns
+        self.building_list, self.building_index_map = get_building_order(self.config)
+
+        self.observation_space = spaces.Dict({
+            "grid": spaces.Box(
+                low=0.0, high=1.0, shape=(32, 32, 12), dtype=np.float32
+            ),
+            "global_features": spaces.Box(
+                low=-1.0, high=1.0, shape=(15,), dtype=np.float32
+            ),
+        })
+        self.action_space = spaces.Discrete(TOTAL_ACTIONS)
+
+        self.gs: GameState | None = None
+        self._prev_pop: int = 0
+        self._last_dynamics: dict[str, float] = {
+            "growth_rate": 0.0,
+            "wheat_conso_ratio": 0.0,
+            "net_income": 0.0,
+        }
+
+    # ------------------------------------------------------------------
+    # Gymnasium API
+    # ------------------------------------------------------------------
+
+    def reset(
+        self,
+        seed: int | None = None,
+        options: dict | None = None,
+    ) -> tuple[dict, dict]:
+        """Réinitialise l'environnement.
+
+        Args:
+            seed: Seed pour ce reset (prioritaire sur self._seed).
+            options: Ignoré (futur usage).
+
+        Returns:
+            Tuple (observation, info).
+        """
+        super().reset(seed=seed)
+        actual_seed = seed if seed is not None else self._seed
+        self.gs = init_game_state(self.config, seed=actual_seed)
+        self._prev_pop = 0
+        self._last_dynamics = {
+            "growth_rate": 0.0,
+            "wheat_conso_ratio": 0.0,
+            "net_income": 0.0,
+        }
+        obs = build_observation(
+            self.gs, self.config, self.building_index_map, self._last_dynamics
+        )
+        return obs, {}
+
+    def step(self, action_int: int) -> tuple[dict, float, bool, bool, dict]:
+        """Exécute une action et avance d'un tour.
+
+        Args:
+            action_int: Entier dans [0, TOTAL_ACTIONS).
+
+        Returns:
+            Tuple (obs, reward, terminated, truncated, info).
+        """
+        if self.gs is None:
+            raise RuntimeError("reset() must be called before step().")
+        action = decode_action(int(action_int), self.building_list)
+        result = engine_step(self.gs, self.config, action)
+
+        # Calcul des dynamics inter-tour
+        new_pop = result.total_population
+        growth_rate = (new_pop - self._prev_pop) / max(1, self._prev_pop)
+        growth_rate = float(np.clip(growth_rate, -1.0, 1.0))
+
+        wheat_conso = sum(
+            math.ceil(h.population / 10) for h in self.gs.houses.values()
+        )
+        wheat_stock_before = self.gs.resource_state.wheat + wheat_conso
+        conso_ratio = wheat_conso / max(1, wheat_stock_before)
+        conso_ratio = float(np.clip(conso_ratio, 0.0, 2.0)) / 2.0
+
+        net_income = float(
+            np.clip(
+                (result.taxes_collected - result.maintenance_paid) / 1_000.0,
+                -1.0,
+                1.0,
+            )
+        )
+
+        self._last_dynamics = {
+            "growth_rate": growth_rate,
+            "wheat_conso_ratio": conso_ratio,
+            "net_income": net_income,
+        }
+        self._prev_pop = new_pop
+
+        obs = build_observation(
+            self.gs, self.config, self.building_index_map, self._last_dynamics
+        )
+        reward = self._compute_reward(result)
+        terminated = bool(result.done)
+        truncated = bool(self.gs.turn >= self.max_turns)
+
+        info: dict = {
+            "turn_result": result,
+            "action_mask": self.action_masks().copy(),
+        }
+        return obs, reward, terminated, truncated, info
+
+    def action_masks(self) -> np.ndarray:
+        """Retourne le masque d'actions valides pour MaskablePPO.
+
+        Returns:
+            Array booléen de forme (TOTAL_ACTIONS,).
+
+        Raises:
+            RuntimeError: Si reset() n'a pas encore été appelé.
+        """
+        if self.gs is None:
+            raise RuntimeError("reset() must be called before action_masks().")
+        return compute_action_mask(self.gs, self.config, self.building_list)
+
+    # ------------------------------------------------------------------
+    # Reward (placeholder étape 12 — shaping complet à l'étape 13)
+    # ------------------------------------------------------------------
+
+    def _compute_reward(self, result: TurnResult) -> float:
+        if result.victory:
+            return 100.0
+        if result.defeat:
+            return -10.0
+        return 0.01
