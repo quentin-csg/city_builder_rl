@@ -127,7 +127,7 @@ def generate_terrain(size: int = 32, seed: int = 42) -> list[list[TerrainType]]:
         result = _generate_terrain_attempt(size, seed + attempt)
         if result is not None:
             if attempt > 0:
-                logger.info("Terrain viable trouvé au seed %d (tentative %d)", seed + attempt, attempt + 1)
+                logger.debug("Terrain viable trouvé au seed %d (tentative %d)", seed + attempt, attempt + 1)
             return result
 
     raise RuntimeError(

@@ -8,7 +8,7 @@ from pathlib import Path
 
 from sb3_contrib import MaskablePPO
 from stable_baselines3.common.callbacks import CheckpointCallback
-from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecEnv
 
 from vitruvius.config import load_config
@@ -56,7 +56,8 @@ def build_vec_env(
 
     Args:
         n_envs: Nombre d'environnements paralleles.
-        seed: Seed de base (chaque env recoit seed + i).
+        seed: Seed de base (chaque env recoit seed + i * 1000 pour eviter
+              les collisions lors des retries de generation de terrain).
         max_turns: Nombre de tours avant truncation.
         subproc: Si True, utilise SubprocVecEnv (deconseille sur Windows).
 
@@ -64,12 +65,12 @@ def build_vec_env(
         VecEnv vectorise avec Monitor wrapper.
     """
     vec_cls = SubprocVecEnv if subproc else DummyVecEnv
-    return make_vec_env(
-        make_env_fn(seed, max_turns),
-        n_envs=n_envs,
-        seed=seed,
-        vec_env_cls=vec_cls,
-    )
+    config = load_config()
+    env_fns = [
+        (lambda s=seed + i * 1000: Monitor(VitruviusEnv(config=config, seed=s, max_turns=max_turns)))
+        for i in range(n_envs)
+    ]
+    return vec_cls(env_fns)
 
 
 def build_model(
@@ -146,12 +147,18 @@ def train(args: argparse.Namespace) -> Path:
         verbose=1,
     )
 
+    # log_interval : nombre de rollouts entre deux affichages du tableau SB3.
+    # Cible : ~8192 steps globaux entre deux logs.
+    steps_per_rollout = args.n_steps * args.n_envs
+    log_interval = max(1, 8192 // steps_per_rollout)
+
     model.learn(
         total_timesteps=args.total_timesteps,
         callback=checkpoint_cb,
         tb_log_name=args.run_name,
         reset_num_timesteps=not bool(args.resume),
-        progress_bar=True,
+        progress_bar=False,
+        log_interval=log_interval,
     )
 
     final_path = model_dir / "vitruvius_final.zip"

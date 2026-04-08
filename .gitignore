@@ -9,7 +9,7 @@ env/
 claude.md
 .claude
 saves/
-
+runs/
 .pytest_cache/
 .coverage
 htmlcov/
