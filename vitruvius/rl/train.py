@@ -148,6 +148,7 @@ def build_model(
         max_grad_norm=0.5,
         tensorboard_log=str(run_dir),
         verbose=1,
+        policy_kwargs={"dist_kwargs": {"validate_args": False}},
     )
 
 
