@@ -7,6 +7,13 @@ import logging
 from pathlib import Path
 
 import numpy as np
+import torch.distributions
+
+# sb3-contrib MaskableCategorical produit des probs dont la somme diffère
+# légèrement de 1.0 en float32 sur certaines plateformes (Linux/torch>=2.10).
+# Désactiver validate_args globalement évite le ValueError sans affecter l'apprentissage.
+torch.distributions.Distribution.set_default_validate_args(False)
+
 from sb3_contrib import MaskablePPO
 from stable_baselines3.common.callbacks import BaseCallback, CallbackList, CheckpointCallback
 from stable_baselines3.common.monitor import Monitor
@@ -148,7 +155,6 @@ def build_model(
         max_grad_norm=0.5,
         tensorboard_log=str(run_dir),
         verbose=1,
-        policy_kwargs={"dist_kwargs": {"validate_args": False}},
     )
 
 
