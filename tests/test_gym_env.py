@@ -31,8 +31,8 @@ def test_env_spaces(cfg):
     e = VitruviusEnv(config=cfg, seed=42)
     from gymnasium import spaces
     assert isinstance(e.observation_space, spaces.Dict)
-    assert e.observation_space["grid"].shape == (32, 32, 12)
-    assert e.observation_space["global_features"].shape == (15,)
+    assert e.observation_space["grid"].shape == (32, 32, 31)
+    assert e.observation_space["global_features"].shape == (18,)
     assert e.action_space.n == TOTAL_ACTIONS
 
 
@@ -45,8 +45,8 @@ def test_env_reset_returns_obs_info(cfg):
     e = VitruviusEnv(config=cfg, seed=42)
     obs, info = e.reset()
     assert set(obs.keys()) == {"grid", "global_features"}
-    assert obs["grid"].shape == (32, 32, 12)
-    assert obs["global_features"].shape == (15,)
+    assert obs["grid"].shape == (32, 32, 31)
+    assert obs["global_features"].shape == (18,)
     assert isinstance(info, dict)
 
 
@@ -68,7 +68,7 @@ def test_env_step_returns_5_tuple(env):
     result = env.step(DO_NOTHING)
     assert len(result) == 5
     obs, reward, terminated, truncated, info = result
-    assert obs["grid"].shape == (32, 32, 12)
+    assert obs["grid"].shape == (32, 32, 31)
     assert isinstance(reward, float)
     assert isinstance(terminated, bool)
     assert isinstance(truncated, bool)
@@ -82,17 +82,17 @@ def test_env_step_do_nothing_advances_turn(env):
 
 
 def test_env_step_reward_survival(env):
-    """DO_NOTHING sur état stable (grille vide, pop=0) → deltas=0, reward=0.01."""
+    """DO_NOTHING sur état stable (grille vide, pop=0) → deltas=0, reward=0.0."""
     _, reward, terminated, truncated, _ = env.step(DO_NOTHING)
     if not terminated:
-        assert reward == pytest.approx(0.01, abs=1e-6)
+        assert reward == pytest.approx(0.0, abs=1e-6)
 
 
 def test_env_reward_determinism(cfg):
     """Même seed + même séquence d'actions → même séquence de rewards."""
     def run(seed: int) -> list[float]:
         e = VitruviusEnv(config=cfg, seed=seed, max_turns=10)
-        e.reset()
+        e.reset(seed=seed)
         rewards = []
         for _ in range(5):
             _, r, term, trunc, _ = e.step(DO_NOTHING)

@@ -3,11 +3,31 @@
 import pytest
 
 from vitruvius.engine.turn import TurnResult
-from vitruvius.rl.reward import RewardState, compute_reward
+from vitruvius.rl.reward import (
+    RewardState,
+    W_BANKRUPT,
+    W_BUILD_FORUM,
+    W_BUILD_OBELISK,
+    W_BUILD_PREFECTURE,
+    W_DEFEAT,
+    W_FAMINE,
+    W_EXODUS,
+    W_FIRST_FARM,
+    W_FIRST_HOUSE,
+    W_FIRST_TEMPLE,
+    W_FIRST_WELL,
+    W_LEVEL,
+    W_POP,
+    W_SAT,
+    W_HOUSING,
+    W_SURVIVAL,
+    W_VICTORY,
+    compute_reward,
+)
 
 
 # ---------------------------------------------------------------------------
-# Fixture : TurnResult et RewardState neutres (aucun effet)
+# Fixtures
 # ---------------------------------------------------------------------------
 
 def neutral_result(**overrides) -> TurnResult:
@@ -36,130 +56,226 @@ def neutral_result(**overrides) -> TurnResult:
     return TurnResult(**base)
 
 
-def same_state(pop: int = 0, level: int = 1, sat: float = 0.5, housing: int = 0) -> RewardState:
-    """Crée un RewardState avec les valeurs données (prev et curr identiques → deltas = 0)."""
+def same_state(
+    pop: int = 0,
+    level: int = 1,
+    sat: float = 0.5,
+    housing: int = 0,
+    **flags,
+) -> RewardState:
+    """Crée un RewardState (prev et curr identiques → deltas = 0)."""
     return RewardState(
         total_population=pop,
         city_level=level,
         global_satisfaction=sat,
         housing_sum=housing,
+        **flags,
     )
 
 
 # ---------------------------------------------------------------------------
-# Tests
+# Tests deltas continus
 # ---------------------------------------------------------------------------
 
 def test_reward_survival_only():
-    """Aucun delta, aucun flag → reward == 0.01 (survie seule)."""
+    """Aucun delta, aucun flag → reward == W_SURVIVAL == 0.0."""
     prev = same_state()
     curr = same_state()
     result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(0.01, abs=1e-6)
+    assert compute_reward(prev, curr, result) == pytest.approx(W_SURVIVAL, abs=1e-6)
 
 
 def test_reward_delta_pop_positive():
-    """+100 pop → contribution +1.0 (+ 0.01 survie)."""
+    """+100 pop → contribution W_POP * 1.0."""
     prev = same_state(pop=0)
     curr = same_state(pop=100)
     result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(1.0 + 0.01, abs=1e-6)
+    assert compute_reward(prev, curr, result) == pytest.approx(W_POP * 1.0 + W_SURVIVAL, abs=1e-6)
 
 
 def test_reward_delta_pop_negative():
-    """-50 pop → contribution -0.5."""
+    """-50 pop → contribution W_POP * -0.5."""
     prev = same_state(pop=100)
     curr = same_state(pop=50)
     result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(-0.5 + 0.01, abs=1e-6)
+    assert compute_reward(prev, curr, result) == pytest.approx(W_POP * -0.5 + W_SURVIVAL, abs=1e-6)
 
 
 def test_reward_delta_city_level():
-    """+1 city level → contribution +5.0."""
+    """+1 city level → contribution W_LEVEL."""
     prev = same_state(level=1)
     curr = same_state(level=2)
     result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(5.0 + 0.01, abs=1e-6)
+    assert compute_reward(prev, curr, result) == pytest.approx(W_LEVEL + W_SURVIVAL, abs=1e-6)
 
 
 def test_reward_delta_city_level_negative():
-    """-1 city level (régression) → contribution -5.0."""
+    """-1 city level → contribution -W_LEVEL."""
     prev = same_state(level=3)
     curr = same_state(level=2)
     result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(-5.0 + 0.01, abs=1e-6)
+    assert compute_reward(prev, curr, result) == pytest.approx(-W_LEVEL + W_SURVIVAL, abs=1e-6)
 
 
 def test_reward_delta_satisfaction():
-    """+0.2 satisfaction → contribution +0.1."""
+    """+0.2 satisfaction → contribution W_SAT * 0.2."""
     prev = same_state(sat=0.5)
     curr = same_state(sat=0.7)
     result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(0.5 * 0.2 + 0.01, abs=1e-6)
+    assert compute_reward(prev, curr, result) == pytest.approx(W_SAT * 0.2 + W_SURVIVAL, abs=1e-6)
 
 
 def test_reward_delta_housing_sum():
-    """+20 housing_sum → contribution +0.2."""
+    """+20 housing_sum → contribution W_HOUSING * 2.0."""
     prev = same_state(housing=0)
     curr = same_state(housing=20)
     result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(0.1 * (20 / 10) + 0.01, abs=1e-6)
+    assert compute_reward(prev, curr, result) == pytest.approx(W_HOUSING * 2.0 + W_SURVIVAL, abs=1e-6)
 
+
+# ---------------------------------------------------------------------------
+# Tests pénalités
+# ---------------------------------------------------------------------------
 
 def test_reward_bankrupt_penalty():
-    """`bankrupt=True` → pénalité -0.5."""
+    """`bankrupt=True` → pénalité W_BANKRUPT."""
     prev = same_state()
     curr = same_state()
     result = neutral_result(bankrupt=True)
-    assert compute_reward(prev, curr, result) == pytest.approx(-0.5 + 0.01, abs=1e-6)
+    assert compute_reward(prev, curr, result) == pytest.approx(W_BANKRUPT + W_SURVIVAL, abs=1e-6)
 
 
 def test_reward_famine_penalty():
-    """`famine_count > 0` → pénalité -0.3."""
+    """`famine_count > 0` → pénalité W_FAMINE."""
     prev = same_state()
     curr = same_state()
     result = neutral_result(famine_count=3)
-    assert compute_reward(prev, curr, result) == pytest.approx(-0.3 + 0.01, abs=1e-6)
+    assert compute_reward(prev, curr, result) == pytest.approx(W_FAMINE + W_SURVIVAL, abs=1e-6)
 
 
 def test_reward_exodus_penalty():
-    """`exodus > 0` → pénalité -0.2."""
+    """`exodus > 0` → pénalité W_EXODUS."""
     prev = same_state()
     curr = same_state()
     result = neutral_result(exodus=50)
-    assert compute_reward(prev, curr, result) == pytest.approx(-0.2 + 0.01, abs=1e-6)
+    assert compute_reward(prev, curr, result) == pytest.approx(W_EXODUS + W_SURVIVAL, abs=1e-6)
 
+
+# ---------------------------------------------------------------------------
+# Tests terminaison
+# ---------------------------------------------------------------------------
 
 def test_reward_victory_bonus():
-    """`victory=True` → +100 (+ survie)."""
+    """`victory=True` → +W_VICTORY."""
     prev = same_state()
     curr = same_state()
     result = neutral_result(victory=True, done=True)
-    assert compute_reward(prev, curr, result) == pytest.approx(100.0 + 0.01, abs=1e-6)
+    assert compute_reward(prev, curr, result) == pytest.approx(W_VICTORY + W_SURVIVAL, abs=1e-6)
 
 
 def test_reward_defeat_penalty():
-    """`defeat=True` → -10 (+ survie)."""
+    """`defeat=True` → W_DEFEAT."""
     prev = same_state()
     curr = same_state()
     result = neutral_result(defeat=True, done=True)
-    assert compute_reward(prev, curr, result) == pytest.approx(-10.0 + 0.01, abs=1e-6)
+    assert compute_reward(prev, curr, result) == pytest.approx(W_DEFEAT + W_SURVIVAL, abs=1e-6)
 
+
+# ---------------------------------------------------------------------------
+# Tests milestones one-shot
+# ---------------------------------------------------------------------------
+
+def test_reward_first_house_milestone():
+    """Transition first_house_placed False→True → +W_FIRST_HOUSE."""
+    prev = same_state(first_house_placed=False)
+    curr = same_state(first_house_placed=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_HOUSE + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_first_farm_milestone():
+    """Transition first_farm_placed False→True → +W_FIRST_FARM."""
+    prev = same_state(first_farm_placed=False)
+    curr = same_state(first_farm_placed=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_FARM + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_first_well_milestone():
+    """Transition first_well_placed False→True → +W_FIRST_WELL."""
+    prev = same_state(first_well_placed=False)
+    curr = same_state(first_well_placed=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_WELL + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_first_temple_milestone():
+    """Transition first_temple_placed False→True → +W_FIRST_TEMPLE."""
+    prev = same_state(first_temple_placed=False)
+    curr = same_state(first_temple_placed=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_TEMPLE + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_build_forum():
+    """Transition has_forum False→True → +W_BUILD_FORUM."""
+    prev = same_state(has_forum=False)
+    curr = same_state(has_forum=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_BUILD_FORUM + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_build_prefecture():
+    """Transition has_prefecture False→True → +W_BUILD_PREFECTURE."""
+    prev = same_state(has_prefecture=False)
+    curr = same_state(has_prefecture=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_BUILD_PREFECTURE + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_build_obelisk():
+    """Transition has_obelisk False→True → +W_BUILD_OBELISK."""
+    prev = same_state(has_obelisk=False)
+    curr = same_state(has_obelisk=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_BUILD_OBELISK + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_milestone_not_triggered_if_already_true():
+    """Si le flag était déjà True, aucun bonus supplémentaire."""
+    prev = same_state(has_forum=True)
+    curr = same_state(has_forum=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_milestone_not_triggered_false_to_false():
+    """Si le flag reste False, aucun bonus."""
+    prev = same_state(has_obelisk=False)
+    curr = same_state(has_obelisk=False)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_SURVIVAL, abs=1e-6)
+
+
+# ---------------------------------------------------------------------------
+# Test combiné
+# ---------------------------------------------------------------------------
 
 def test_reward_combined():
     """Plusieurs effets simultanés : somme exacte vérifiée."""
-    # +100 pop, +1 level, famine, bankrupt
     prev = RewardState(total_population=0, city_level=1, global_satisfaction=0.5, housing_sum=0)
-    curr = RewardState(total_population=100, city_level=2, global_satisfaction=0.5, housing_sum=0)
+    curr = RewardState(total_population=100, city_level=2, global_satisfaction=0.5, housing_sum=0,
+                       first_house_placed=True)
     result = neutral_result(famine_count=1, bankrupt=True)
 
     expected = (
-        1.0 * (100 / 100)   # delta_pop
-        + 5.0 * 1           # delta_level
-        + 0.5 * 0.0         # delta_sat (inchangée)
-        + 0.1 * 0.0         # delta_housing (inchangé)
-        + (-0.5)            # bankrupt
-        + (-0.3)            # famine
-        + 0.01              # survie
+        W_POP * (100 / 100.0)   # delta_pop
+        + W_LEVEL * 1            # delta_level
+        + W_SAT * 0.0            # delta_sat
+        + W_HOUSING * 0.0        # delta_housing
+        + W_FIRST_HOUSE          # milestone first_house
+        + W_BANKRUPT             # bankrupt
+        + W_FAMINE               # famine
+        + W_SURVIVAL
     )
     assert compute_reward(prev, curr, result) == pytest.approx(expected, abs=1e-6)

@@ -6,8 +6,9 @@ import argparse
 import logging
 from pathlib import Path
 
+import numpy as np
 from sb3_contrib import MaskablePPO
-from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.callbacks import BaseCallback, CallbackList, CheckpointCallback
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecEnv
 
@@ -21,6 +22,50 @@ DEFAULT_N_ENVS: int = 8
 DEFAULT_MAX_TURNS: int = 1000
 DEFAULT_CHECKPOINT_FREQ: int = 100_000
 DEFAULT_SEED: int = 42
+
+
+# ---------------------------------------------------------------------------
+# Callback metriques metier
+# ---------------------------------------------------------------------------
+
+
+class VitruviusMetricsCallback(BaseCallback):
+    """Logue des metriques metier Vitruvius dans TensorBoard a chaque fin d'episode.
+
+    Metriques loguees (prefixe vitruvius/) :
+        city_level, population, satisfaction, victory_rate,
+        defeat_rate, famine_rate, exodus_rate.
+    """
+
+    def __init__(self, verbose: int = 0) -> None:
+        super().__init__(verbose)
+        self._ep_stats: list[dict] = []
+
+    def _on_step(self) -> bool:
+        for done, info in zip(self.locals["dones"], self.locals["infos"]):
+            if not done:
+                continue
+            result = info.get("turn_result")
+            if result is None:
+                continue
+            self._ep_stats.append({
+                "city_level": result.city_level,
+                "population": result.total_population,
+                "satisfaction": result.global_satisfaction,
+                "victory": float(result.victory),
+                "defeat": float(result.defeat),
+                "famine": float(result.famine_count > 0),
+                "exodus": float(result.exodus > 0),
+            })
+        return True
+
+    def _on_rollout_end(self) -> None:
+        if not self._ep_stats:
+            return
+        for key in self._ep_stats[0]:
+            values = [s[key] for s in self._ep_stats]
+            self.logger.record(f"vitruvius/{key}", np.mean(values))
+        self._ep_stats = []
 
 
 # ---------------------------------------------------------------------------
@@ -146,6 +191,7 @@ def train(args: argparse.Namespace) -> Path:
         name_prefix="vitruvius",
         verbose=1,
     )
+    metrics_cb = VitruviusMetricsCallback()
 
     # log_interval : nombre de rollouts entre deux affichages du tableau SB3.
     # Cible : ~8192 steps globaux entre deux logs.
@@ -154,7 +200,7 @@ def train(args: argparse.Namespace) -> Path:
 
     model.learn(
         total_timesteps=args.total_timesteps,
-        callback=checkpoint_cb,
+        callback=CallbackList([checkpoint_cb, metrics_cb]),
         tb_log_name=args.run_name,
         reset_num_timesteps=not bool(args.resume),
         progress_bar=False,

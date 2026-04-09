@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from vitruvius.engine.turn import TurnResult
 
@@ -16,21 +16,41 @@ class RewardState:
     global_satisfaction: float
     housing_sum: int  # somme des niveaux de toutes les maisons
 
+    # Flags de batiments-cles pour la victoire (one-shot, irreversibles)
+    has_forum: bool = False
+    has_obelisk: bool = False
+    has_prefecture: bool = False
+
+    # Milestones de premier placement (one-shot, irreversibles)
+    first_house_placed: bool = False
+    first_farm_placed: bool = False
+    first_well_placed: bool = False
+    first_temple_placed: bool = False
+
 
 # ---------------------------------------------------------------------------
-# Coefficients (voir CLAUDE.md — reward shaping)
+# Coefficients
 # ---------------------------------------------------------------------------
 
-W_POP = 1.0
-W_LEVEL = 5.0
-W_SAT = 0.5
-W_HOUSING = 0.1
-W_BANKRUPT = -0.5
-W_FAMINE = -0.3
-W_EXODUS = -0.2
-W_VICTORY = 100.0
-W_DEFEAT = -10.0
-W_SURVIVAL = 0.01
+W_POP: float = 2.0       # par tranche de 100 hab gagnés
+W_LEVEL: float = 15.0    # par niveau de ville gagné
+W_SAT: float = 0.5       # par point de satisfaction gagné (0–1)
+W_HOUSING: float = 0.1   # par tranche de 10 niveaux de maison gagnés
+W_BANKRUPT: float = -0.5
+W_FAMINE: float = -0.3
+W_EXODUS: float = -0.2
+W_VICTORY: float = 50.0
+W_DEFEAT: float = -10.0
+W_SURVIVAL: float = 0.0  # supprimé : évite le plateau DO_NOTHING
+
+# Milestones one-shot (bonus uniques, déclenchés à la première occurrence)
+W_FIRST_HOUSE: float = 1.0
+W_FIRST_FARM: float = 2.0
+W_FIRST_WELL: float = 1.0
+W_FIRST_TEMPLE: float = 8.0
+W_BUILD_FORUM: float = 10.0
+W_BUILD_PREFECTURE: float = 15.0
+W_BUILD_OBELISK: float = 20.0
 
 
 def compute_reward(
@@ -38,7 +58,7 @@ def compute_reward(
     curr: RewardState,
     result: TurnResult,
 ) -> float:
-    """Calcule le reward d'un tour selon la formule CLAUDE.md.
+    """Calcule le reward d'un tour selon la formule de shaping.
 
     Fonction pure : aucun effet de bord, aucune dépendance à GameState.
 
@@ -50,17 +70,31 @@ def compute_reward(
     Returns:
         Reward scalaire (non clampé).
     """
-    delta_pop = curr.total_population - prev.total_population
-    delta_level = curr.city_level - prev.city_level
-    delta_sat = curr.global_satisfaction - prev.global_satisfaction
-    delta_housing = curr.housing_sum - prev.housing_sum
-
     reward = 0.0
-    reward += W_POP * (delta_pop / 100.0)
-    reward += W_LEVEL * delta_level
-    reward += W_SAT * delta_sat
-    reward += W_HOUSING * (delta_housing / 10.0)
 
+    # Deltas continus
+    reward += W_POP * (curr.total_population - prev.total_population) / 100.0
+    reward += W_LEVEL * (curr.city_level - prev.city_level)
+    reward += W_SAT * (curr.global_satisfaction - prev.global_satisfaction)
+    reward += W_HOUSING * (curr.housing_sum - prev.housing_sum) / 10.0
+
+    # Milestones one-shot : déclenchés uniquement à la première transition False→True
+    if not prev.first_house_placed and curr.first_house_placed:
+        reward += W_FIRST_HOUSE
+    if not prev.first_farm_placed and curr.first_farm_placed:
+        reward += W_FIRST_FARM
+    if not prev.first_well_placed and curr.first_well_placed:
+        reward += W_FIRST_WELL
+    if not prev.first_temple_placed and curr.first_temple_placed:
+        reward += W_FIRST_TEMPLE
+    if not prev.has_forum and curr.has_forum:
+        reward += W_BUILD_FORUM
+    if not prev.has_prefecture and curr.has_prefecture:
+        reward += W_BUILD_PREFECTURE
+    if not prev.has_obelisk and curr.has_obelisk:
+        reward += W_BUILD_OBELISK
+
+    # Pénalités
     if result.bankrupt:
         reward += W_BANKRUPT
     if result.famine_count > 0:
@@ -68,6 +102,7 @@ def compute_reward(
     if result.exodus > 0:
         reward += W_EXODUS
 
+    # Terminaison
     if result.victory:
         reward += W_VICTORY
     if result.defeat:

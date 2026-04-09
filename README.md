@@ -58,8 +58,7 @@ Les sauvegardes sont stockées dans le dossier `saves/`.
 ## Démarrage rapide
 
 ```bash
-# Installer les dépendances
-pip install -e ".[dev]"
+pip install -r requirements.txt
 
 # Lancer tous les tests
 pytest -v

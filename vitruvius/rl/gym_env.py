@@ -53,10 +53,10 @@ class VitruviusEnv(gym.Env):
 
         self.observation_space = spaces.Dict({
             "grid": spaces.Box(
-                low=0.0, high=1.0, shape=(32, 32, 12), dtype=np.float32
+                low=0.0, high=1.0, shape=(32, 32, 31), dtype=np.float32
             ),
             "global_features": spaces.Box(
-                low=-1.0, high=1.0, shape=(15,), dtype=np.float32
+                low=-1.0, high=1.0, shape=(18,), dtype=np.float32
             ),
         })
         self.action_space = spaces.Discrete(TOTAL_ACTIONS)
@@ -177,10 +177,36 @@ class VitruviusEnv(gym.Env):
     # ------------------------------------------------------------------
 
     def _snapshot_reward_state(self) -> RewardState:
-        """Capture un snapshot des métriques pour le calcul du reward delta."""
+        """Capture un snapshot des métriques pour le calcul du reward delta.
+
+        Les flags one-shot (milestones) sont irreversibles : une fois True,
+        ils restent True même si le batiment est démoli.
+        """
+        ids = self.gs.grid._placed_ids  # Counter[str], O(1) par type
+        prev = self._prev_reward_state
+
+        # Propagation irreversible : prev.flag OR flag_actuel
+        def _keep(prev_val: bool, current: bool) -> bool:
+            return prev_val or current
+
+        p_has_forum = prev.has_forum if prev else False
+        p_has_obelisk = prev.has_obelisk if prev else False
+        p_has_prefecture = prev.has_prefecture if prev else False
+        p_house = prev.first_house_placed if prev else False
+        p_farm = prev.first_farm_placed if prev else False
+        p_well = prev.first_well_placed if prev else False
+        p_temple = prev.first_temple_placed if prev else False
+
         return RewardState(
             total_population=sum(h.population for h in self.gs.houses.values()),
             city_level=self.gs.city_level,
             global_satisfaction=self.gs.global_satisfaction,
             housing_sum=sum(h.level for h in self.gs.houses.values()),
+            has_forum=_keep(p_has_forum, ids["forum"] > 0),
+            has_obelisk=_keep(p_has_obelisk, ids["obelisk"] > 0),
+            has_prefecture=_keep(p_has_prefecture, ids["prefecture"] > 0),
+            first_house_placed=_keep(p_house, len(self.gs.houses) > 0),
+            first_farm_placed=_keep(p_farm, ids["wheat_farm"] > 0),
+            first_well_placed=_keep(p_well, ids["well"] > 0),
+            first_temple_placed=_keep(p_temple, ids["temple"] > 0),
         )
