@@ -13,7 +13,7 @@ runs/
 .pytest_cache/
 .coverage
 htmlcov/
-
+test_client.py
 dist/
 build/
 *.egg-info/
@@ -22,7 +22,10 @@ runs/
 models/
 *.zip
 
-godot/
+# Godot — fichiers auto-générés uniquement
+godot/.godot/
+godot/**/*.import
+godot/**/*.uid
 
 .ruff_cache/
 .python-version
