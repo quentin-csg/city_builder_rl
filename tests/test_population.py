@@ -325,12 +325,32 @@ def test_evolve_level1_to_2_when_needs_met(house_levels):
     assert h.level == 2
 
 
-def test_evolve_level0_unchanged(house_levels):
+def test_evolve_level0_no_water_unchanged(house_levels):
+    """Level 0 sans couverture water → reste à 0."""
+    h = HouseState(origin=(0, 0), level=0, population=0)
+    houses = {(0, 0): h}
+    evolved, regressed = evolve_houses(houses, {(0, 0): set()}, house_levels)
+    assert evolved == 0
+    assert regressed == 0
+    assert h.level == 0
+
+
+def test_evolve_level0_with_water_promotes_to_1(house_levels):
+    """Level 0 avec couverture water → évolue vers level 1."""
     h = HouseState(origin=(0, 0), level=0, population=0)
     houses = {(0, 0): h}
     evolved, regressed = evolve_houses(houses, {(0, 0): {"water"}}, house_levels)
-    assert evolved == 0
+    assert evolved == 1
     assert regressed == 0
+    assert h.level == 1
+
+
+def test_evolve_level0_no_coverage_entry_unchanged(house_levels):
+    """Level 0 sans entrée coverage (hors rayon) → reste à 0."""
+    h = HouseState(origin=(0, 0), level=0, population=0)
+    houses = {(0, 0): h}
+    evolved, regressed = evolve_houses(houses, {}, house_levels)
+    assert evolved == 0
     assert h.level == 0
 
 

@@ -23,4 +23,4 @@ resources:
     max_storage: 3200
 
 passive_income:
-  denarii: 10
+  denarii: 20

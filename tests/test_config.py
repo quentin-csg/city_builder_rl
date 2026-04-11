@@ -61,7 +61,7 @@ def test_resources_storage(cfg: GameConfig) -> None:
 
 
 def test_passive_income(cfg: GameConfig) -> None:
-    assert cfg.resources.passive_income.denarii == 10
+    assert cfg.resources.passive_income.denarii == 20
 
 
 # ---------------------------------------------------------------------------

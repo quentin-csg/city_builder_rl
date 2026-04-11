@@ -13,10 +13,16 @@ from vitruvius.rl.reward import (
     W_FAMINE,
     W_EXODUS,
     W_FIRST_FARM,
+    W_FIRST_GRANARY,
     W_FIRST_HOUSE,
+    W_FIRST_LUMBER_CAMP,
+    W_FIRST_MARKET,
+    W_FIRST_POPULATION,
     W_FIRST_TEMPLE,
+    W_FIRST_TRADING_POST,
     W_FIRST_WELL,
     W_LEVEL,
+    W_POSITIVE_INCOME,
     W_POP,
     W_SAT,
     W_HOUSING,
@@ -239,6 +245,62 @@ def test_reward_build_obelisk():
     curr = same_state(has_obelisk=True)
     result = neutral_result()
     assert compute_reward(prev, curr, result) == pytest.approx(W_BUILD_OBELISK + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_first_granary_milestone():
+    """Transition first_granary_placed False→True → +W_FIRST_GRANARY."""
+    prev = same_state(first_granary_placed=False)
+    curr = same_state(first_granary_placed=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_GRANARY + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_first_market_milestone():
+    """Transition first_market_placed False→True → +W_FIRST_MARKET."""
+    prev = same_state(first_market_placed=False)
+    curr = same_state(first_market_placed=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_MARKET + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_first_lumber_camp_milestone():
+    """Transition first_lumber_camp_placed False→True → +W_FIRST_LUMBER_CAMP."""
+    prev = same_state(first_lumber_camp_placed=False)
+    curr = same_state(first_lumber_camp_placed=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_LUMBER_CAMP + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_first_trading_post_milestone():
+    """Transition first_trading_post_placed False→True → +W_FIRST_TRADING_POST."""
+    prev = same_state(first_trading_post_placed=False)
+    curr = same_state(first_trading_post_placed=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_TRADING_POST + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_first_population_milestone():
+    """Transition first_population False→True → +W_FIRST_POPULATION."""
+    prev = same_state(first_population=False)
+    curr = same_state(first_population=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_POPULATION + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_positive_income_bonus():
+    """`taxes + passive > maintenance` → +W_POSITIVE_INCOME."""
+    prev = same_state()
+    curr = same_state()
+    result = neutral_result(taxes_collected=30.0, passive_income=20.0, maintenance_paid=10.0)
+    assert compute_reward(prev, curr, result) == pytest.approx(W_POSITIVE_INCOME + W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_no_positive_income_when_loss():
+    """`taxes + passive <= maintenance` → pas de bonus W_POSITIVE_INCOME."""
+    prev = same_state()
+    curr = same_state()
+    result = neutral_result(taxes_collected=5.0, passive_income=5.0, maintenance_paid=20.0)
+    assert compute_reward(prev, curr, result) == pytest.approx(W_SURVIVAL, abs=1e-6)
 
 
 def test_reward_milestone_not_triggered_if_already_true():

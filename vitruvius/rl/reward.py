@@ -26,19 +26,27 @@ class RewardState:
     first_farm_placed: bool = False
     first_well_placed: bool = False
     first_temple_placed: bool = False
+    first_granary_placed: bool = False
+    first_market_placed: bool = False
+    first_lumber_camp_placed: bool = False
+    first_trading_post_placed: bool = False
+
+    # Milestone première population
+    first_population: bool = False
 
 
 # ---------------------------------------------------------------------------
 # Coefficients
 # ---------------------------------------------------------------------------
 
-W_POP: float = 2.0       # par tranche de 100 hab gagnés
+W_POP: float = 8.0        # par tranche de 100 hab gagnés
 W_LEVEL: float = 15.0    # par niveau de ville gagné
-W_SAT: float = 0.5       # par point de satisfaction gagné (0–1)
-W_HOUSING: float = 0.1   # par tranche de 10 niveaux de maison gagnés
-W_BANKRUPT: float = -0.5
-W_FAMINE: float = -0.3
-W_EXODUS: float = -0.2
+W_SAT: float = 2.0        # par point de satisfaction gagné (0–1)
+W_HOUSING: float = 1.0    # par tranche de 10 niveaux de maison gagnés
+W_BANKRUPT: float = -0.15
+W_FAMINE: float = -0.1
+W_EXODUS: float = -0.1
+W_POSITIVE_INCOME: float = 0.05  # bonus si taxes+passif > maintenance
 W_VICTORY: float = 50.0
 W_DEFEAT: float = -10.0
 W_SURVIVAL: float = 0.0  # supprimé : évite le plateau DO_NOTHING
@@ -47,6 +55,11 @@ W_SURVIVAL: float = 0.0  # supprimé : évite le plateau DO_NOTHING
 W_FIRST_HOUSE: float = 1.0
 W_FIRST_FARM: float = 2.0
 W_FIRST_WELL: float = 1.0
+W_FIRST_GRANARY: float = 3.0
+W_FIRST_MARKET: float = 3.0
+W_FIRST_LUMBER_CAMP: float = 2.0
+W_FIRST_TRADING_POST: float = 3.0
+W_FIRST_POPULATION: float = 5.0
 W_FIRST_TEMPLE: float = 8.0
 W_BUILD_FORUM: float = 10.0
 W_BUILD_PREFECTURE: float = 15.0
@@ -85,6 +98,16 @@ def compute_reward(
         reward += W_FIRST_FARM
     if not prev.first_well_placed and curr.first_well_placed:
         reward += W_FIRST_WELL
+    if not prev.first_granary_placed and curr.first_granary_placed:
+        reward += W_FIRST_GRANARY
+    if not prev.first_market_placed and curr.first_market_placed:
+        reward += W_FIRST_MARKET
+    if not prev.first_lumber_camp_placed and curr.first_lumber_camp_placed:
+        reward += W_FIRST_LUMBER_CAMP
+    if not prev.first_trading_post_placed and curr.first_trading_post_placed:
+        reward += W_FIRST_TRADING_POST
+    if not prev.first_population and curr.first_population:
+        reward += W_FIRST_POPULATION
     if not prev.first_temple_placed and curr.first_temple_placed:
         reward += W_FIRST_TEMPLE
     if not prev.has_forum and curr.has_forum:
@@ -101,6 +124,10 @@ def compute_reward(
         reward += W_FAMINE
     if result.exodus > 0:
         reward += W_EXODUS
+
+    # Bonus économie viable
+    if result.taxes_collected + result.passive_income > result.maintenance_paid:
+        reward += W_POSITIVE_INCOME
 
     # Terminaison
     if result.victory:

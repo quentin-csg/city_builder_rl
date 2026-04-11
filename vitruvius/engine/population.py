@@ -272,6 +272,12 @@ def evolve_houses(
     regressed = 0
     for house in houses.values():
         if house.level == 0:
+            # Level 0 peut évoluer vers level 1 si les besoins de level 1 sont satisfaits
+            covered = coverage.get(house.origin, set())
+            next_needs = house_levels[0].required_needs  # level 1 = ["water"]
+            if all(n in covered for n in next_needs):
+                house.level = 1
+                evolved += 1
             continue
         covered = coverage.get(house.origin, set())
         current_needs = house_levels[house.level - 1].required_needs

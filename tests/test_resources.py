@@ -248,8 +248,8 @@ def test_prod_farm_modifier_no_effect_on_denarii(bldg, res_cfg):
 def test_passive_income(res_cfg):
     state = ResourceState(denarii=100.0, wheat=0, wood=0, marble=0)
     added = apply_passive_income(state, res_cfg.passive_income)
-    assert state.denarii == 110.0
-    assert added == 10.0
+    assert state.denarii == 120.0
+    assert added == 20.0
 
 
 # ---------------------------------------------------------------------------

@@ -376,8 +376,10 @@ def test_marble_quarry_on_hill_only(cfg):
 def test_bankrupt_defeat_after_5_turns(cfg):
     """5 tours consécutifs sous -500 denarii → défaite."""
     gs = init_game_state(cfg, seed=42)
-    # Forcer une situation de banqueroute permanente
-    gs.resource_state.denarii = -600.0
+    # Forcer une situation de banqueroute permanente.
+    # -700 garantit que même avec le revenu passif (20/tour), denarii reste < -500
+    # pendant 5 tours consécutifs : -700 + 5×20 = -600 < -500.
+    gs.resource_state.denarii = -700.0
 
     done = False
     for turn in range(20):

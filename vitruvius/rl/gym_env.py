@@ -196,9 +196,16 @@ class VitruviusEnv(gym.Env):
         p_farm = prev.first_farm_placed if prev else False
         p_well = prev.first_well_placed if prev else False
         p_temple = prev.first_temple_placed if prev else False
+        p_granary = prev.first_granary_placed if prev else False
+        p_market = prev.first_market_placed if prev else False
+        p_lumber = prev.first_lumber_camp_placed if prev else False
+        p_trading = prev.first_trading_post_placed if prev else False
+        p_population = prev.first_population if prev else False
+
+        total_pop = sum(h.population for h in self.gs.houses.values())
 
         return RewardState(
-            total_population=sum(h.population for h in self.gs.houses.values()),
+            total_population=total_pop,
             city_level=self.gs.city_level,
             global_satisfaction=self.gs.global_satisfaction,
             housing_sum=sum(h.level for h in self.gs.houses.values()),
@@ -209,4 +216,9 @@ class VitruviusEnv(gym.Env):
             first_farm_placed=_keep(p_farm, ids["wheat_farm"] > 0),
             first_well_placed=_keep(p_well, ids["well"] > 0),
             first_temple_placed=_keep(p_temple, ids["temple"] > 0),
+            first_granary_placed=_keep(p_granary, ids["granary"] > 0),
+            first_market_placed=_keep(p_market, ids["market"] > 0),
+            first_lumber_camp_placed=_keep(p_lumber, ids["lumber_camp"] > 0),
+            first_trading_post_placed=_keep(p_trading, ids["trading_post"] > 0),
+            first_population=_keep(p_population, total_pop > 0),
         )

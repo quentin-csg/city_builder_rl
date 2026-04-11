@@ -137,7 +137,7 @@ def test_step_place_road(cfg, gs):
     before_denarii = gs.resource_state.denarii
     step(gs, cfg, Action("place", "road", x, y))
     assert gs.grid.get_building_at(x, y) is not None
-    assert gs.resource_state.denarii < before_denarii + 10  # passive income - coût route
+    assert gs.resource_state.denarii < before_denarii + 20  # passive income - coût route
 
 
 def test_step_place_housing_creates_house_state(cfg, gs):
