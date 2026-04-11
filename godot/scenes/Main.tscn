@@ -1,0 +1,48 @@
+[gd_scene load_steps=2 format=3 uid="uid://main"]
+
+[ext_resource type="Script" path="res://scripts/Main.gd" id="1_main"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1_main")
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="UI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+
+[node name="StatusLabel" type="Label" parent="UI/VBox"]
+layout_mode = 2
+text = "Connecting..."
+theme_override_font_sizes/font_size = 18
+
+[node name="DoNothingButton" type="Button" parent="UI/VBox"]
+layout_mode = 2
+disabled = true
+text = "Envoyer do_nothing"
+
+[node name="LogScroll" type="ScrollContainer" parent="UI/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LogLabel" type="RichTextLabel" parent="UI/VBox/LogScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true

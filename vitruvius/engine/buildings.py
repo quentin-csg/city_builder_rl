@@ -67,6 +67,7 @@ class BuildingConfig(BaseModel):
     cost: dict[str, int]
     maintenance: int
     unique: bool
+    fire_immune: bool = False
     terrain_constraint: TerrainConstraint | None = None
     production: ProductionConfig | None = None
     storage: StorageConfig | None = None

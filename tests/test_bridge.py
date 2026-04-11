@@ -308,3 +308,48 @@ def test_game_session_auto_step_without_model_raises(config):
     session = GameSession(config, seed=0)
     with pytest.raises(RuntimeError, match="modèle"):
         session.auto_step(n=1)
+
+
+# ---------------------------------------------------------------------------
+# Tests unitaires : formules dynamics (alignement gym_env.py ↔ server.py)
+# ---------------------------------------------------------------------------
+
+
+def test_game_session_prev_pop_initialized_and_resets(config):
+    """_prev_pop démarre à 0 et revient à 0 après reset().
+
+    Cette valeur est utilisée dans growth_rate = (new - prev) / max(1, prev).
+    Si elle n'était pas réinitialisée, le premier tour après reset donnerait
+    un growth_rate basé sur la pop de la partie précédente.
+    """
+    session = GameSession(config, seed=0)
+    assert session._prev_pop == 0
+
+    session._prev_pop = 999  # simuler N tours joués
+    session.reset(seed=1)
+    assert session._prev_pop == 0
+
+
+def test_dynamics_wheat_conso_ratio_formula(config):
+    """wheat_conso_ratio utilise le stock AVANT consommation (stock_après + conso).
+
+    Bug précédent (server.py) : min(1, conso / stock_après) utilisait le stock
+    post-consommation, sous-estimant le ratio quand le stock était quasi-vide.
+
+    Scénario : 1 blé consommé, 99 blé restant → stock avant = 100.
+    Formule correcte : 1 / 100 / 2 = 0.005.
+    Ancienne formule : 1 / 99 ≈ 0.0101 — valeur différente.
+    """
+    wheat_stock_after = 99
+    wheat_conso = 1
+
+    # Formule correcte (gym_env.py et server.py corrigé)
+    wheat_stock_before = wheat_stock_after + wheat_conso
+    correct = max(0.0, min(2.0, wheat_conso / max(1, wheat_stock_before))) / 2.0
+
+    # Ancienne formule buggée (server.py avant correction)
+    old = min(1.0, wheat_conso / max(1, wheat_stock_after))
+
+    assert abs(correct - 0.005) < 1e-9
+    assert abs(old - 1 / 99) < 1e-9
+    assert correct < old  # la correction réduit le ratio (dénominateur plus grand)

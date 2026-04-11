@@ -25,6 +25,7 @@ import argparse
 import asyncio
 import json
 import logging
+import math
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -75,6 +76,7 @@ class GameSession:
         self.building_list, self.building_index_map = get_building_order(config)
         self.model: Any = None  # MaskablePPO | None
         self.gs: GameState = init_game_state(config, seed=seed)
+        self._prev_pop: int = 0
 
     # ------------------------------------------------------------------
     # Actions humaines
@@ -100,6 +102,7 @@ class GameSession:
         new_seed = seed if seed is not None else self.gs.seed
         self.gs = init_game_state(self.config, seed=new_seed)
         self.model = None
+        self._prev_pop = 0
 
     # ------------------------------------------------------------------
     # Replay d'un modèle
@@ -168,19 +171,28 @@ class GameSession:
             result = step(self.gs, self.config, action)
             results.append(result)
 
-            # Mise à jour des dynamics pour le tour suivant
-            rs = self.gs.resource_state
-            total_pop = result.total_population
-            wheat_stock = rs.wheat
-            conso = result.production.get("wheat", 0)
+            # Mise à jour des dynamics pour le tour suivant — formules alignées sur gym_env.py
+            new_pop = result.total_population
+            growth_rate = (new_pop - self._prev_pop) / max(1, self._prev_pop)
+            growth_rate = max(-1.0, min(1.0, growth_rate))
+            self._prev_pop = new_pop
+
+            wheat_conso = sum(
+                math.ceil(h.population / 10) for h in self.gs.houses.values()
+            )
+            wheat_stock_before = self.gs.resource_state.wheat + wheat_conso
+            conso_ratio = wheat_conso / max(1, wheat_stock_before)
+            conso_ratio = max(0.0, min(2.0, conso_ratio)) / 2.0
+
+            net_income = max(
+                -1.0,
+                min(1.0, (result.taxes_collected - result.maintenance_paid) / 1000.0),
+            )
 
             dynamics = {
-                "growth_rate": max(-1.0, min(1.0, result.growth / max(1, total_pop))),
-                "wheat_conso_ratio": min(1.0, conso / max(1, wheat_stock)),
-                "net_income": max(
-                    -1.0,
-                    min(1.0, (result.taxes_collected + result.passive_income - result.maintenance_paid) / 1000.0),
-                ),
+                "growth_rate": growth_rate,
+                "wheat_conso_ratio": conso_ratio,
+                "net_income": net_income,
             }
 
         return results

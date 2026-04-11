@@ -134,11 +134,12 @@ def _apply_fire(
     Returns:
         ActiveEvent si un bâtiment est détruit, None si fizzle ou grille vide.
     """
-    # Batiments eligibles : exclure les uniques (forum, obelisque)
+    # Batiments eligibles : exclure les uniques (forum, obelisque) et les fire_immune (well, fountain)
     eligible = [
         (origin, pb)
         for origin, pb in grid.placed_buildings.items()
         if not building_configs[pb.building_id].unique
+        and not building_configs[pb.building_id].fire_immune
     ]
     if not eligible:
         return None

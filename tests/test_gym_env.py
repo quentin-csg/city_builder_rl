@@ -148,6 +148,39 @@ def test_env_truncated_after_max_turns(cfg):
 
 
 # ---------------------------------------------------------------------------
+# Dynamics inter-tour
+# ---------------------------------------------------------------------------
+
+
+def test_dynamics_net_income_excludes_passive_income(cfg):
+    """net_income = (taxes - maint) / 1000 — passive_income exclu.
+
+    Bug précédent (server.py) : (taxes + passive - maint) / 1000 → delta constant +0.01/+0.02.
+    Sur grille vide : taxes=0, maintenance=0 → net_income doit être exactement 0.0.
+    """
+    e = VitruviusEnv(config=cfg, seed=42)
+    e.reset()
+    e.step(DO_NOTHING)
+    assert e._last_dynamics["net_income"] == pytest.approx(0.0), (
+        f"net_income={e._last_dynamics['net_income']} — passive_income probablement inclus"
+    )
+
+
+def test_dynamics_growth_rate_uses_stored_prev_pop(cfg):
+    """growth_rate = (new_pop - _prev_pop) / max(1, _prev_pop), clampé [-1, 1].
+
+    Bug précédent (server.py) : result.growth / total_pop ignorait _prev_pop.
+    Ici on force _prev_pop=200 avec une grille sans maisons (new_pop=0) :
+    growth_rate attendu = (0 - 200) / max(1, 200) = -1.0 après clamp.
+    """
+    e = VitruviusEnv(config=cfg, seed=42)
+    e.reset()
+    e._prev_pop = 200  # pas de maisons → new_pop reste 0 après le step
+    e.step(DO_NOTHING)
+    assert e._last_dynamics["growth_rate"] == pytest.approx(-1.0)
+
+
+# ---------------------------------------------------------------------------
 # check_env (Gymnasium)
 # ---------------------------------------------------------------------------
 

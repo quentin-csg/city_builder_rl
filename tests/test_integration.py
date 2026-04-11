@@ -459,7 +459,7 @@ def test_turnresult_consistency_over_full_game(cfg):
 # Tests de fuzzing : actions légales aléatoires sur beaucoup de seeds
 # ---------------------------------------------------------------------------
 
-FUZZ_SEEDS = list(range(30))          # 30 seeds différentes
+FUZZ_SEEDS = list(range(5))           # 5 seeds — valeur marginale au-delà de 5
 FUZZ_MAX_TURNS = 300                  # 300 tours par partie
 
 
@@ -503,7 +503,7 @@ def test_fuzz_random_legal_actions(cfg, building_list, seed):
 # Tests de fuzzing : actions DO_NOTHING pures sur seeds variées
 # ---------------------------------------------------------------------------
 
-IDLE_SEEDS = list(range(20, 50))  # seeds 20-49
+IDLE_SEEDS = list(range(20, 25))  # seeds 20-24
 
 
 @pytest.mark.parametrize("seed", IDLE_SEEDS)

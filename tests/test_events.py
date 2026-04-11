@@ -169,7 +169,7 @@ def test_draw_deterministic_seed(events_cfg):
 
 
 def test_fire_destroys_building(events_cfg, bldg, grid, state):
-    origin = _place(grid, state, bldg, "well")
+    origin = _place(grid, state, bldg, "small_altar")
     assert origin is not None
     count_before = len(grid.placed_buildings)
     rng = np.random.default_rng(0)
@@ -182,12 +182,12 @@ def test_fire_destroys_building(events_cfg, bldg, grid, state):
 def test_fire_no_refund(events_cfg, bldg):
     g = Grid(seed=42)
     s = ResourceState(denarii=5000.0, wheat=0, wood=500, marble=500)
-    _place(g, s, bldg, "well")
+    _place(g, s, bldg, "small_altar")
     denarii_before = s.denarii
     rng = np.random.default_rng(0)
     apply_event("fire", events_cfg["fire"], [], rng, g, s, bldg)
     # Le remboursement de try_demolish n'a PAS lieu : denarii ne doit pas augmenter
-    # (le well coûte du denarii, donc si remboursement il y aurait eu)
+    # (le small_altar coûte du denarii, donc si remboursement il y aurait eu)
     assert s.denarii == denarii_before
 
 
@@ -289,7 +289,7 @@ def test_fire_no_prefecture_no_second_roll(events_cfg, bldg):
     """Sans prefecture, pas de second roll : le batiment brule directement."""
     g = Grid(seed=42)
     s = ResourceState(denarii=5000.0, wheat=0, wood=500, marble=500)
-    _place(g, s, bldg, "well")
+    _place(g, s, bldg, "small_altar")
     count_before = len(g.placed_buildings)
     rng = np.random.default_rng(99)
     event = apply_event("fire", events_cfg["fire"], [], rng, g, s, bldg)

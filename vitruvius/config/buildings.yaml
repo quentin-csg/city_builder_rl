@@ -23,6 +23,7 @@ buildings:
       denarii: 50
     maintenance: 3
     unique: false
+    fire_immune: true
     terrain_constraint: null
     production: null
     storage: null
@@ -39,6 +40,7 @@ buildings:
       denarii: 100
     maintenance: 5
     unique: false
+    fire_immune: true
     terrain_constraint: null
     production: null
     storage: null
