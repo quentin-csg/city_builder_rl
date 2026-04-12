@@ -322,7 +322,7 @@ def test_demolish_refund_multi(grid, bldg):
     pb = try_demolish(grid, s, x, y, bldg)
     assert pb is not None
     assert s.denarii == 1000.0   # floor(2000 * 0.5)
-    assert s.marble == 100       # floor(200 * 0.5)
+    assert s.marble == 50        # floor(100 * 0.5)
 
 
 # ---------------------------------------------------------------------------

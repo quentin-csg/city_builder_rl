@@ -89,7 +89,7 @@ def test_building_costs(cfg: GameConfig) -> None:
     b = cfg.buildings.buildings
     assert b["temple"].cost == {"denarii": 800, "marble": 100}
     assert b["housing"].cost == {"wood": 10}
-    assert b["forum"].cost == {"denarii": 2000, "marble": 200}
+    assert b["forum"].cost == {"denarii": 2000, "marble": 100}
     assert b["obelisk"].cost == {"denarii": 1000, "marble": 500}
 
 

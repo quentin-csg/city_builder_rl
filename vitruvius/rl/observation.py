@@ -162,7 +162,7 @@ def build_observation(
         rs.denarii / 10_000.0,                            # [0]
         rs.wheat / 5_000.0,                               # [1]
         rs.wood / 5_000.0,                                # [2]
-        rs.marble / 5_000.0,                              # [3]
+        rs.marble / 500.0,                                # [3] — 200 marble = 0.40 (visible)
         total_pop / 5_000.0,                              # [4]
         gs.global_satisfaction,                           # [5]
         gs.city_level / 5.0,                              # [6]

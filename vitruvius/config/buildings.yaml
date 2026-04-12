@@ -237,7 +237,7 @@ buildings:
     size: [4, 4]
     cost:
       denarii: 2000
-      marble: 200
+      marble: 100
     maintenance: 100
     unique: true
     terrain_constraint: null
