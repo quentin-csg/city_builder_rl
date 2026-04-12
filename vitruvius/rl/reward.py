@@ -55,10 +55,10 @@ W_LEVEL: float = 15.0    # par niveau de ville gagné
 W_SAT: float = 2.0        # par point de satisfaction gagné (0–1)
 W_HOUSING: float = 1.0    # par tranche de 10 niveaux de maison gagnés
 W_BANKRUPT: float = -0.15
-W_FAMINE: float = -0.1
+W_FAMINE: float = -0.2
 W_EXODUS: float = -0.1
 W_POSITIVE_INCOME: float = 0.05  # bonus si taxes+passif > maintenance
-W_MARBLE_PROGRESS: float = 5.0   # par tranche de 100 marble gagnés (uniquement gain)
+W_MARBLE_PROGRESS: float = 2.0   # par tranche de 100 marble gagnés × pop_factor
 W_VICTORY: float = 50.0
 W_DEFEAT: float = -10.0
 W_SURVIVAL: float = 0.0  # supprimé : évite le plateau DO_NOTHING
@@ -73,8 +73,8 @@ W_FIRST_LUMBER_CAMP: float = 2.0
 W_FIRST_TRADING_POST: float = 3.0
 W_FIRST_POPULATION: float = 5.0
 W_FIRST_TEMPLE: float = 8.0
-W_FIRST_MARBLE_QUARRY: float = 3.0
-W_FIRST_WAREHOUSE_MARBLE: float = 3.0
+W_FIRST_MARBLE_QUARRY: float = 2.0
+W_FIRST_WAREHOUSE_MARBLE: float = 2.0
 W_FIRST_BATHS: float = 3.0
 W_FIRST_THEATER: float = 3.0
 W_BUILD_FORUM: float = 10.0
@@ -126,10 +126,12 @@ def compute_reward(
         reward += W_FIRST_POPULATION
     if not prev.first_temple_placed and curr.first_temple_placed:
         reward += W_FIRST_TEMPLE
+    # Gate marble rewards par la population : séquençage naturel (d'abord pop, ensuite marble)
+    pop_factor = min(1.0, curr.total_population / 100.0)
     if not prev.first_marble_quarry_placed and curr.first_marble_quarry_placed:
-        reward += W_FIRST_MARBLE_QUARRY
+        reward += W_FIRST_MARBLE_QUARRY * pop_factor
     if not prev.first_warehouse_marble_placed and curr.first_warehouse_marble_placed:
-        reward += W_FIRST_WAREHOUSE_MARBLE
+        reward += W_FIRST_WAREHOUSE_MARBLE * pop_factor
     if not prev.first_baths_placed and curr.first_baths_placed:
         reward += W_FIRST_BATHS
     if not prev.first_theater_placed and curr.first_theater_placed:
@@ -149,9 +151,9 @@ def compute_reward(
     if result.exodus > 0:
         reward += W_EXODUS
 
-    # Reward continu marble : récompense uniquement le gain (pas la dépense)
+    # Reward continu marble : uniquement le gain, gaté par pop_factor (séquençage)
     marble_gain = max(0, curr.marble_stock - prev.marble_stock)
-    reward += W_MARBLE_PROGRESS * marble_gain / 100.0
+    reward += W_MARBLE_PROGRESS * marble_gain / 100.0 * pop_factor
 
     # Bonus économie viable
     if result.taxes_collected + result.passive_income > result.maintenance_paid:

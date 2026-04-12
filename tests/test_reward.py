@@ -309,17 +309,17 @@ def test_reward_no_positive_income_when_loss():
 
 
 def test_reward_first_marble_quarry_milestone():
-    """Transition first_marble_quarry_placed False→True → +W_FIRST_MARBLE_QUARRY."""
-    prev = same_state(first_marble_quarry_placed=False)
-    curr = same_state(first_marble_quarry_placed=True)
+    """Transition first_marble_quarry_placed False→True à pop=200 (pop_factor=1.0) → +W_FIRST_MARBLE_QUARRY."""
+    prev = same_state(pop=200, first_marble_quarry_placed=False)
+    curr = same_state(pop=200, first_marble_quarry_placed=True)
     result = neutral_result()
     assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_MARBLE_QUARRY + W_SURVIVAL, abs=1e-6)
 
 
 def test_reward_first_warehouse_marble_milestone():
-    """Transition first_warehouse_marble_placed False→True → +W_FIRST_WAREHOUSE_MARBLE."""
-    prev = same_state(first_warehouse_marble_placed=False)
-    curr = same_state(first_warehouse_marble_placed=True)
+    """Transition first_warehouse_marble_placed False→True à pop=200 (pop_factor=1.0) → +W_FIRST_WAREHOUSE_MARBLE."""
+    prev = same_state(pop=200, first_warehouse_marble_placed=False)
+    curr = same_state(pop=200, first_warehouse_marble_placed=True)
     result = neutral_result()
     assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_WAREHOUSE_MARBLE + W_SURVIVAL, abs=1e-6)
 
@@ -341,19 +341,49 @@ def test_reward_first_theater_milestone():
 
 
 def test_reward_marble_progress_on_gain():
-    """Gain de 100 marble → W_MARBLE_PROGRESS * 1.0. Ne compte pas si marble diminue."""
-    prev = same_state(marble_stock=0)
-    curr = same_state(marble_stock=100)
+    """Gain de 100 marble à pop=200 (pop_factor=1.0) → W_MARBLE_PROGRESS * 1.0."""
+    prev = same_state(pop=200, marble_stock=0)
+    curr = same_state(pop=200, marble_stock=100)
     result = neutral_result()
     assert compute_reward(prev, curr, result) == pytest.approx(W_MARBLE_PROGRESS * 1.0 + W_SURVIVAL, abs=1e-6)
 
 
 def test_reward_marble_progress_zero_on_spend():
-    """Dépense de marble (−100) → aucune pénalité (max 0). Le milestone du bâtiment compense."""
-    prev = same_state(marble_stock=100)
-    curr = same_state(marble_stock=0)
+    """Dépense de marble (−100) à pop=200 → aucune pénalité (max 0). Le milestone du bâtiment compense."""
+    prev = same_state(pop=200, marble_stock=100)
+    curr = same_state(pop=200, marble_stock=0)
     result = neutral_result()
     assert compute_reward(prev, curr, result) == pytest.approx(W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_marble_quarry_gated_by_pop_zero():
+    """À pop=0, milestone marble_quarry → 0 (pop_factor=0.0 → séquençage : pop d'abord)."""
+    prev = same_state(pop=0, first_marble_quarry_placed=False)
+    curr = same_state(pop=0, first_marble_quarry_placed=True)
+    result = neutral_result()
+    assert compute_reward(prev, curr, result) == pytest.approx(W_SURVIVAL, abs=1e-6)
+
+
+def test_reward_marble_quarry_gated_by_pop_half():
+    """À pop=50, milestone marble_quarry → W_FIRST_MARBLE_QUARRY * 0.5 (pop_factor=0.5)."""
+    prev = same_state(pop=50, first_marble_quarry_placed=False)
+    curr = same_state(pop=50, first_marble_quarry_placed=True)
+    result = neutral_result()
+    expected = W_FIRST_MARBLE_QUARRY * 0.5 + W_SURVIVAL
+    assert compute_reward(prev, curr, result) == pytest.approx(expected, abs=1e-6)
+
+
+def test_reward_marble_progress_gated_by_pop():
+    """marble_progress est gaté par pop_factor : pop=0 → 0, pop=50 → × 0.5."""
+    # pop=0 → gain de 100 marble ne donne rien
+    prev_0 = same_state(pop=0, marble_stock=0)
+    curr_0 = same_state(pop=0, marble_stock=100)
+    assert compute_reward(prev_0, curr_0, neutral_result()) == pytest.approx(W_SURVIVAL, abs=1e-6)
+    # pop=50 → pop_factor=0.5
+    prev_50 = same_state(pop=50, marble_stock=0)
+    curr_50 = same_state(pop=50, marble_stock=100)
+    expected = W_MARBLE_PROGRESS * 1.0 * 0.5 + W_SURVIVAL
+    assert compute_reward(prev_50, curr_50, neutral_result()) == pytest.approx(expected, abs=1e-6)
 
 
 def test_reward_milestone_not_triggered_if_already_true():
