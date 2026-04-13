@@ -61,7 +61,7 @@ def test_resources_storage(cfg: GameConfig) -> None:
 
 
 def test_passive_income(cfg: GameConfig) -> None:
-    assert cfg.resources.passive_income.denarii == 40
+    assert cfg.resources.passive_income.denarii == 20
 
 
 # ---------------------------------------------------------------------------
@@ -89,26 +89,16 @@ def test_building_costs(cfg: GameConfig) -> None:
     b = cfg.buildings.buildings
     assert b["temple"].cost == {"denarii": 800, "marble": 100}
     assert b["housing"].cost == {"wood": 10}
-    assert b["forum"].cost == {"denarii": 2000, "marble": 100}
+    assert b["forum"].cost == {"denarii": 2000, "marble": 200}
     assert b["obelisk"].cost == {"denarii": 1000, "marble": 500}
 
 
 def test_building_maintenance(cfg: GameConfig) -> None:
-    """Vérifie maintenance == ceil(denarii_cost * 0.05), sauf exceptions gameplay."""
+    """Vérifie que maintenance == ceil(denarii_cost * 0.05) sauf road et housing (0)."""
     zero_maintenance = {"road", "housing"}
-    # Exceptions : valeurs custom pour raisons d'équilibre (pas la règle 5%)
-    custom_maintenance = {
-        "forum": 40,           # bâtiment civique : maintenance réduite (se finance via tax_bonus)
-        "marble_quarry": 8,    # opère passivement une fois construite
-        "warehouse_marble": 8, # stockage passif
-    }
     for bld_id, bld in cfg.buildings.buildings.items():
         if bld_id in zero_maintenance:
             assert bld.maintenance == 0, f"{bld_id}: maintenance devrait être 0"
-        elif bld_id in custom_maintenance:
-            assert bld.maintenance == custom_maintenance[bld_id], (
-                f"{bld_id}: maintenance={bld.maintenance}, attendu={custom_maintenance[bld_id]}"
-            )
         else:
             denarii_cost = bld.cost.get("denarii", 0)
             expected = math.ceil(denarii_cost * 0.05)

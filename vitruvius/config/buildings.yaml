@@ -122,14 +122,14 @@ buildings:
     size: [3, 3]
     cost:
       denarii: 400
-    maintenance: 8
+    maintenance: 20
     unique: false
     terrain_constraint:
       type: "all_tiles"
       terrain: "hill"
     production:
       resource: "marble"
-      amount: 8
+      amount: 6
     storage: null
     service: null
     special_effect: null
@@ -237,8 +237,8 @@ buildings:
     size: [4, 4]
     cost:
       denarii: 2000
-      marble: 100
-    maintenance: 40
+      marble: 200
+    maintenance: 100
     unique: true
     terrain_constraint: null
     production: null
@@ -302,7 +302,7 @@ buildings:
     size: [3, 3]
     cost:
       denarii: 400
-    maintenance: 8
+    maintenance: 20
     unique: false
     terrain_constraint: null
     production: null

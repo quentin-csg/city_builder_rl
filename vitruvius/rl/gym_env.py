@@ -201,10 +201,6 @@ class VitruviusEnv(gym.Env):
         p_lumber = prev.first_lumber_camp_placed if prev else False
         p_trading = prev.first_trading_post_placed if prev else False
         p_population = prev.first_population if prev else False
-        p_marble_quarry = prev.first_marble_quarry_placed if prev else False
-        p_warehouse_marble = prev.first_warehouse_marble_placed if prev else False
-        p_baths = prev.first_baths_placed if prev else False
-        p_theater = prev.first_theater_placed if prev else False
 
         total_pop = sum(h.population for h in self.gs.houses.values())
 
@@ -225,9 +221,4 @@ class VitruviusEnv(gym.Env):
             first_lumber_camp_placed=_keep(p_lumber, ids["lumber_camp"] > 0),
             first_trading_post_placed=_keep(p_trading, ids["trading_post"] > 0),
             first_population=_keep(p_population, total_pop > 0),
-            first_marble_quarry_placed=_keep(p_marble_quarry, ids["marble_quarry"] > 0),
-            first_warehouse_marble_placed=_keep(p_warehouse_marble, ids["warehouse_marble"] > 0),
-            first_baths_placed=_keep(p_baths, ids["baths"] > 0),
-            first_theater_placed=_keep(p_theater, ids["theater"] > 0),
-            marble_stock=self.gs.resource_state.marble,
         )

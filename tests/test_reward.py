@@ -12,21 +12,16 @@ from vitruvius.rl.reward import (
     W_DEFEAT,
     W_FAMINE,
     W_EXODUS,
-    W_FIRST_BATHS,
     W_FIRST_FARM,
     W_FIRST_GRANARY,
     W_FIRST_HOUSE,
     W_FIRST_LUMBER_CAMP,
-    W_FIRST_MARBLE_QUARRY,
     W_FIRST_MARKET,
     W_FIRST_POPULATION,
     W_FIRST_TEMPLE,
-    W_FIRST_THEATER,
     W_FIRST_TRADING_POST,
-    W_FIRST_WAREHOUSE_MARBLE,
     W_FIRST_WELL,
     W_LEVEL,
-    W_MARBLE_PROGRESS,
     W_POSITIVE_INCOME,
     W_POP,
     W_SAT,
@@ -306,84 +301,6 @@ def test_reward_no_positive_income_when_loss():
     curr = same_state()
     result = neutral_result(taxes_collected=5.0, passive_income=5.0, maintenance_paid=20.0)
     assert compute_reward(prev, curr, result) == pytest.approx(W_SURVIVAL, abs=1e-6)
-
-
-def test_reward_first_marble_quarry_milestone():
-    """Transition first_marble_quarry_placed False→True à pop=200 (pop_factor=1.0) → +W_FIRST_MARBLE_QUARRY."""
-    prev = same_state(pop=200, first_marble_quarry_placed=False)
-    curr = same_state(pop=200, first_marble_quarry_placed=True)
-    result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_MARBLE_QUARRY + W_SURVIVAL, abs=1e-6)
-
-
-def test_reward_first_warehouse_marble_milestone():
-    """Transition first_warehouse_marble_placed False→True à pop=200 (pop_factor=1.0) → +W_FIRST_WAREHOUSE_MARBLE."""
-    prev = same_state(pop=200, first_warehouse_marble_placed=False)
-    curr = same_state(pop=200, first_warehouse_marble_placed=True)
-    result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_WAREHOUSE_MARBLE + W_SURVIVAL, abs=1e-6)
-
-
-def test_reward_first_baths_milestone():
-    """Transition first_baths_placed False→True → +W_FIRST_BATHS."""
-    prev = same_state(first_baths_placed=False)
-    curr = same_state(first_baths_placed=True)
-    result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_BATHS + W_SURVIVAL, abs=1e-6)
-
-
-def test_reward_first_theater_milestone():
-    """Transition first_theater_placed False→True → +W_FIRST_THEATER."""
-    prev = same_state(first_theater_placed=False)
-    curr = same_state(first_theater_placed=True)
-    result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(W_FIRST_THEATER + W_SURVIVAL, abs=1e-6)
-
-
-def test_reward_marble_progress_on_gain():
-    """Gain de 100 marble à pop=200 (pop_factor=1.0) → W_MARBLE_PROGRESS * 1.0."""
-    prev = same_state(pop=200, marble_stock=0)
-    curr = same_state(pop=200, marble_stock=100)
-    result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(W_MARBLE_PROGRESS * 1.0 + W_SURVIVAL, abs=1e-6)
-
-
-def test_reward_marble_progress_zero_on_spend():
-    """Dépense de marble (−100) à pop=200 → aucune pénalité (max 0). Le milestone du bâtiment compense."""
-    prev = same_state(pop=200, marble_stock=100)
-    curr = same_state(pop=200, marble_stock=0)
-    result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(W_SURVIVAL, abs=1e-6)
-
-
-def test_reward_marble_quarry_gated_by_pop_zero():
-    """À pop=0, milestone marble_quarry → 0 (pop_factor=0.0 → séquençage : pop d'abord)."""
-    prev = same_state(pop=0, first_marble_quarry_placed=False)
-    curr = same_state(pop=0, first_marble_quarry_placed=True)
-    result = neutral_result()
-    assert compute_reward(prev, curr, result) == pytest.approx(W_SURVIVAL, abs=1e-6)
-
-
-def test_reward_marble_quarry_gated_by_pop_half():
-    """À pop=50, milestone marble_quarry → W_FIRST_MARBLE_QUARRY * 0.5 (pop_factor=0.5)."""
-    prev = same_state(pop=50, first_marble_quarry_placed=False)
-    curr = same_state(pop=50, first_marble_quarry_placed=True)
-    result = neutral_result()
-    expected = W_FIRST_MARBLE_QUARRY * 0.5 + W_SURVIVAL
-    assert compute_reward(prev, curr, result) == pytest.approx(expected, abs=1e-6)
-
-
-def test_reward_marble_progress_gated_by_pop():
-    """marble_progress est gaté par pop_factor : pop=0 → 0, pop=50 → × 0.5."""
-    # pop=0 → gain de 100 marble ne donne rien
-    prev_0 = same_state(pop=0, marble_stock=0)
-    curr_0 = same_state(pop=0, marble_stock=100)
-    assert compute_reward(prev_0, curr_0, neutral_result()) == pytest.approx(W_SURVIVAL, abs=1e-6)
-    # pop=50 → pop_factor=0.5
-    prev_50 = same_state(pop=50, marble_stock=0)
-    curr_50 = same_state(pop=50, marble_stock=100)
-    expected = W_MARBLE_PROGRESS * 1.0 * 0.5 + W_SURVIVAL
-    assert compute_reward(prev_50, curr_50, neutral_result()) == pytest.approx(expected, abs=1e-6)
 
 
 def test_reward_milestone_not_triggered_if_already_true():

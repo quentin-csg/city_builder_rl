@@ -180,14 +180,6 @@ def test_dynamics_growth_rate_uses_stored_prev_pop(cfg):
     assert e._last_dynamics["growth_rate"] == pytest.approx(-1.0)
 
 
-def test_snapshot_marble_stock_reflects_resource_state(cfg):
-    """marble_stock dans RewardState = rs.marble courant. Vérifié sur état initial."""
-    e = VitruviusEnv(config=cfg, seed=42)
-    e.reset()
-    snapshot = e._snapshot_reward_state()
-    assert snapshot.marble_stock == e.gs.resource_state.marble
-
-
 # ---------------------------------------------------------------------------
 # check_env (Gymnasium)
 # ---------------------------------------------------------------------------

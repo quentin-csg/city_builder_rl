@@ -201,9 +201,9 @@ def train(args: argparse.Namespace) -> Path:
     metrics_cb = VitruviusMetricsCallback()
 
     # log_interval : nombre de rollouts entre deux affichages du tableau SB3.
-    # Cible : ~16384 steps globaux entre deux logs.
+    # Cible : ~8192 steps globaux entre deux logs.
     steps_per_rollout = args.n_steps * args.n_envs
-    log_interval = max(1, 16384 // steps_per_rollout)
+    log_interval = max(1, 8192 // steps_per_rollout)
 
     model.learn(
         total_timesteps=args.total_timesteps,

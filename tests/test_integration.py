@@ -272,7 +272,7 @@ def test_demolish_granary_clamps_wheat(cfg):
 def test_action_succeeded_false_on_illegal_placement(cfg):
     """Placer un bâtiment sans ressources → action_succeeded=False."""
     gs = init_game_state(cfg, seed=42)
-    # Forum coûte 2000 denarii + 100 marble, on a 800 denarii et 0 marble
+    # Forum coûte 2000 denarii + 200 marble, on a 800 denarii et 0 marble
     result = step(gs, cfg, Action("place", "forum", 5, 5))
     assert not result.action_succeeded, "Forum sans ressources doit échouer"
     # La grille ne doit pas contenir de forum
@@ -322,16 +322,9 @@ def test_unique_building_cannot_be_placed_twice(cfg):
 
 def test_place_on_water_terrain_fails(cfg):
     """Placer un bâtiment sur eau doit échouer (terrain invalide)."""
-    from vitruvius.engine.terrain import TerrainType
     gs = init_game_state(cfg, seed=42)
-    # Cherche dynamiquement une tile WATER (la rivière traverse toujours la grille)
-    water_tile = next(
-        (x, y)
-        for y in range(gs.grid.SIZE)
-        for x in range(gs.grid.SIZE)
-        if gs.grid.terrain[y][x] == TerrainType.WATER
-    )
-    result = step(gs, cfg, Action("place", "road", water_tile[0], water_tile[1]))
+    # Tile water confirmée sur seed 42 : (13, 19)
+    result = step(gs, cfg, Action("place", "road", 13, 19))
     assert not result.action_succeeded, "Placement sur eau doit échouer"
 
 
@@ -364,17 +357,11 @@ def test_immigration_lost_when_houses_full(cfg):
 
 
 def test_wheat_farm_on_plain_only(cfg):
-    """wheat_farm sur tuile non-plain (hill ou forest) → doit échouer (contrainte terrain)."""
-    from vitruvius.engine.terrain import TerrainType
+    """wheat_farm sur tuile hill → doit échouer (contrainte terrain)."""
     gs = init_game_state(cfg, seed=42)
-    # Cherche dynamiquement une tile HILL (terrain non-plain pour wheat_farm)
-    hill_tile = next(
-        (x, y)
-        for y in range(gs.grid.SIZE)
-        for x in range(gs.grid.SIZE)
-        if gs.grid.terrain[y][x] == TerrainType.HILL
-    )
-    result = step(gs, cfg, Action("place", "wheat_farm", hill_tile[0], hill_tile[1]))
+    # Hill tile connue seed 42 : (4, 0)
+    result = step(gs, cfg, Action("place", "wheat_farm", 4, 0))
+    # wheat_farm requiert all_tiles=plain, (4,0) est hill → échec
     assert not result.action_succeeded, "wheat_farm sur hill doit échouer"
 
 
@@ -390,9 +377,9 @@ def test_bankrupt_defeat_after_5_turns(cfg):
     """5 tours consécutifs sous -500 denarii → défaite."""
     gs = init_game_state(cfg, seed=42)
     # Forcer une situation de banqueroute permanente.
-    # -900 garantit que même avec le revenu passif (40/tour), denarii reste < -500
-    # pendant 5 tours consécutifs : -900 + 5×40 = -700 < -500.
-    gs.resource_state.denarii = -900.0
+    # -700 garantit que même avec le revenu passif (20/tour), denarii reste < -500
+    # pendant 5 tours consécutifs : -700 + 5×20 = -600 < -500.
+    gs.resource_state.denarii = -700.0
 
     done = False
     for turn in range(20):
