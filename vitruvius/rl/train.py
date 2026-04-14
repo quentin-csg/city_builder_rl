@@ -143,7 +143,7 @@ def build_model(
     return MaskablePPO(
         "MultiInputPolicy",
         env,
-        learning_rate=args.learning_rate,
+        learning_rate=lambda f: args.lr_end + (args.learning_rate - args.lr_end) * f,
         n_steps=args.n_steps,
         batch_size=args.batch_size,
         n_epochs=args.n_epochs,
@@ -201,9 +201,9 @@ def train(args: argparse.Namespace) -> Path:
     metrics_cb = VitruviusMetricsCallback()
 
     # log_interval : nombre de rollouts entre deux affichages du tableau SB3.
-    # Cible : ~8192 steps globaux entre deux logs.
+    # Cible : ~32768  steps globaux entre deux logs.
     steps_per_rollout = args.n_steps * args.n_envs
-    log_interval = max(1, 8192 // steps_per_rollout)
+    log_interval = max(1, 32768  // steps_per_rollout)
 
     model.learn(
         total_timesteps=args.total_timesteps,
@@ -274,6 +274,7 @@ def build_argparser() -> argparse.ArgumentParser:
     )
     # Hyperparametres PPO
     p.add_argument("--learning-rate", type=float, default=3e-4)
+    p.add_argument("--lr-end", type=float, default=1e-4)
     p.add_argument("--n-steps", type=int, default=2048)
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--n-epochs", type=int, default=10)
