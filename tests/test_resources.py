@@ -57,9 +57,9 @@ def _placed(*building_ids: str) -> dict[tuple[int, int], PlacedBuilding]:
 
 def test_init_from_config(res_cfg):
     state = init_resources(res_cfg)
-    assert state.denarii == 800.0
-    assert state.wheat == 200
-    assert state.wood == 100
+    assert state.denarii == 1000.0
+    assert state.wheat == 300
+    assert state.wood == 150
     assert state.marble == 0
 
 
@@ -202,8 +202,8 @@ def test_prod_marble_quarry_with_warehouse(bldg, res_cfg):
     state = ResourceState(denarii=800.0, wheat=0, wood=0, marble=0)
     placed = _placed("marble_quarry", "warehouse_marble")
     result = apply_production(state, placed, bldg, res_cfg)
-    assert state.marble == 6
-    assert result.get("marble", 0) == 6
+    assert state.marble == 10
+    assert result.get("marble", 0) == 10
 
 
 def test_prod_marble_quarry_without_warehouse(bldg, res_cfg):
@@ -248,8 +248,8 @@ def test_prod_farm_modifier_no_effect_on_denarii(bldg, res_cfg):
 def test_passive_income(res_cfg):
     state = ResourceState(denarii=100.0, wheat=0, wood=0, marble=0)
     added = apply_passive_income(state, res_cfg.passive_income)
-    assert state.denarii == 120.0
-    assert added == 20.0
+    assert state.denarii == 125.0
+    assert added == 25.0
 
 
 # ---------------------------------------------------------------------------
@@ -292,9 +292,9 @@ def test_maint_housing_zero(bldg):
 
 def test_maint_negative(bldg):
     state = ResourceState(denarii=5.0, wheat=0, wood=0, marble=0)
-    placed = _placed("forum")  # maintenance = 100
+    placed = _placed("forum")  # maintenance = 75
     apply_maintenance(state, placed, bldg)
-    assert state.denarii == -95.0
+    assert state.denarii == -70.0
 
 
 def test_maint_returns_total(bldg):

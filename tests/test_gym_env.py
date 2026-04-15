@@ -85,8 +85,8 @@ def test_env_step_reward_survival(env):
     """DO_NOTHING sur grille vide → pas de delta, mais W_POSITIVE_INCOME car passif > maintenance."""
     _, reward, terminated, truncated, _ = env.step(DO_NOTHING)
     if not terminated:
-        # passif 20 > maintenance 0 → bonus W_POSITIVE_INCOME = 0.05
-        assert reward == pytest.approx(0.05, abs=1e-6)
+        # passif 25 > maintenance 0 → bonus W_POSITIVE_INCOME = 0.15
+        assert reward == pytest.approx(0.15, abs=1e-6)
 
 
 def test_env_reward_determinism(cfg):
@@ -189,3 +189,79 @@ def test_env_check_env(cfg):
     from gymnasium.utils.env_checker import check_env
     e = VitruviusEnv(config=cfg, seed=42, max_turns=10)
     check_env(e, warn=True)
+
+
+# ---------------------------------------------------------------------------
+# Snapshot reward state — regression tests pour les nouveaux champs
+# ---------------------------------------------------------------------------
+
+
+def test_snapshot_total_houses_zero_on_empty_grid(cfg):
+    """total_houses=0 sur grille vide après reset."""
+    e = VitruviusEnv(config=cfg, seed=42)
+    e.reset()
+    snap = e._snapshot_reward_state()
+    assert snap.total_houses == 0
+
+
+def test_snapshot_marble_milestone_triggered(cfg):
+    """reached_marble_50 True quand resource_state.marble >= 50."""
+    e = VitruviusEnv(config=cfg, seed=42)
+    e.reset()
+    e.gs.resource_state.marble = 50
+    snap = e._snapshot_reward_state()
+    assert snap.reached_marble_50 is True
+    assert snap.reached_marble_100 is False
+    assert snap.reached_marble_200 is False
+
+
+def test_snapshot_marble_milestones_100_and_200(cfg):
+    """Paliers 100 et 200 activés correctement selon la valeur marble."""
+    e = VitruviusEnv(config=cfg, seed=42)
+    e.reset()
+    e.gs.resource_state.marble = 200
+    snap = e._snapshot_reward_state()
+    assert snap.reached_marble_50 is True
+    assert snap.reached_marble_100 is True
+    assert snap.reached_marble_200 is True
+    assert snap.reached_marble_500 is False
+
+
+def test_snapshot_milestone_irreversible_after_marble_drops(cfg):
+    """reached_marble_50 reste True même quand marble redescend sous 50."""
+    e = VitruviusEnv(config=cfg, seed=42)
+    e.reset()
+    # Premier snapshot avec marble >= 50
+    e.gs.resource_state.marble = 50
+    snap1 = e._snapshot_reward_state()
+    assert snap1.reached_marble_50 is True
+    # Simule un paiement qui vide le stock (impossible en gameplay, mais test du contrat)
+    e._prev_reward_state = snap1
+    e.gs.resource_state.marble = 0
+    snap2 = e._snapshot_reward_state()
+    assert snap2.reached_marble_50 is True  # irréversible grâce à _keep()
+
+
+def test_snapshot_house_level_milestone(cfg):
+    """first_house_level_2 True quand une maison de niveau >= 2 existe."""
+    from vitruvius.engine.population import HouseState
+    e = VitruviusEnv(config=cfg, seed=42)
+    e.reset()
+    # Injection directe d'une maison niveau 2
+    e.gs.houses[(5, 5)] = HouseState(origin=(5, 5), level=2, population=10)
+    snap = e._snapshot_reward_state()
+    assert snap.first_house_level_2 is True
+    assert snap.first_house_level_3 is False
+    assert snap.total_houses == 1
+
+
+def test_snapshot_pop_milestone_triggered(cfg):
+    """reached_pop_100 True quand sum(population) >= 100."""
+    from vitruvius.engine.population import HouseState
+    e = VitruviusEnv(config=cfg, seed=42)
+    e.reset()
+    e.gs.houses[(3, 3)] = HouseState(origin=(3, 3), level=2, population=100)
+    snap = e._snapshot_reward_state()
+    assert snap.reached_pop_100 is True
+    assert snap.reached_pop_250 is False
+    assert snap.first_population is True

@@ -39,50 +39,68 @@ def test_city_level_1_insufficient_conditions(city_levels):
 
 
 def test_city_level_2_all_conditions_met(city_levels):
-    """pop=200, sat=0.40, forum présent → level 2."""
-    placed = Counter({"forum": 1})
-    assert compute_city_level(200, 0.40, placed, city_levels) == 2
+    """pop=150, sat=0.40, market présent → level 2."""
+    placed = Counter({"market": 1})
+    assert compute_city_level(150, 0.40, placed, city_levels) == 2
 
 
-def test_city_level_2_missing_forum(city_levels):
-    """pop=200, sat=0.40 mais pas de forum → level 1."""
-    assert compute_city_level(200, 0.40, Counter(), city_levels) == 1
+def test_city_level_2_missing_market(city_levels):
+    """pop=150, sat=0.40 mais pas de market → level 1."""
+    assert compute_city_level(150, 0.40, Counter(), city_levels) == 1
 
 
 def test_city_level_2_insufficient_sat(city_levels):
-    """pop=200 mais sat=0.39 < 0.40 → level 1."""
-    placed = Counter({"forum": 1})
-    assert compute_city_level(200, 0.39, placed, city_levels) == 1
+    """pop=150 mais sat=0.39 < 0.40 → level 1."""
+    placed = Counter({"market": 1})
+    assert compute_city_level(150, 0.39, placed, city_levels) == 1
+
+
+def test_city_level_2_insufficient_pop(city_levels):
+    """pop=149 < 150 avec market + sat OK → level 1."""
+    placed = Counter({"market": 1})
+    assert compute_city_level(149, 0.40, placed, city_levels) == 1
 
 
 def test_city_level_3_all_conditions_met(city_levels):
-    """pop=500, sat=0.50, temple + forum → level 3."""
-    placed = Counter({"temple": 1, "forum": 1})
+    """pop=500, sat=0.50, market + forum + temple → level 3."""
+    placed = Counter({"market": 1, "forum": 1, "temple": 1})
     assert compute_city_level(500, 0.50, placed, city_levels) == 3
 
 
 def test_city_level_3_missing_temple(city_levels):
-    """pop=500, sat=0.50, forum seulement (pas temple) → level 2."""
-    placed = Counter({"forum": 1})
+    """pop=500, sat=0.50, market + forum seulement (pas temple) → level 2."""
+    placed = Counter({"market": 1, "forum": 1})
+    assert compute_city_level(500, 0.50, placed, city_levels) == 2
+
+
+def test_city_level_3_missing_forum(city_levels):
+    """pop=500, sat=0.50, market + temple (pas forum) → level 2."""
+    placed = Counter({"market": 1, "temple": 1})
     assert compute_city_level(500, 0.50, placed, city_levels) == 2
 
 
 def test_city_level_4_all_conditions_met(city_levels):
-    """pop=1500, sat=0.60, market + theater + baths → level 4."""
-    placed = Counter({"forum": 1, "temple": 1, "market": 1, "theater": 1, "baths": 1})
+    """pop=1500, sat=0.60, héritage complet + theater + baths → level 4."""
+    placed = Counter({"market": 1, "forum": 1, "temple": 1, "theater": 1, "baths": 1})
     assert compute_city_level(1500, 0.60, placed, city_levels) == 4
 
 
 def test_city_level_4_missing_one_building(city_levels):
-    """pop=1500, sat=0.60, market + theater (pas baths) → level 3."""
-    placed = Counter({"forum": 1, "temple": 1, "market": 1, "theater": 1})
+    """pop=1500, sat=0.60, market + forum + temple + theater (pas baths) → level 3."""
+    placed = Counter({"market": 1, "forum": 1, "temple": 1, "theater": 1})
     assert compute_city_level(1500, 0.60, placed, city_levels) == 3
 
 
+def test_city_level_4_cannot_skip_level_3(city_levels):
+    """Avec theater + baths mais sans forum/temple → impossible d'atteindre L4 (héritage)."""
+    placed = Counter({"market": 1, "theater": 1, "baths": 1})
+    assert compute_city_level(1500, 0.60, placed, city_levels) == 2
+
+
 def test_city_level_5_nova_roma(city_levels):
-    """pop=2500, sat=0.65, obelisk + prefecture → level 5 (Nova Roma)."""
+    """pop=2500, sat=0.65, tous bâtiments hérités + obelisk + prefecture → level 5."""
     placed = Counter({
-        "forum": 1, "temple": 1, "market": 1, "theater": 1, "baths": 1,
+        "market": 1, "forum": 1, "temple": 1, "theater": 1, "baths": 1,
         "obelisk": 1, "prefecture": 1,
     })
     assert compute_city_level(2500, 0.65, placed, city_levels) == 5
@@ -91,16 +109,25 @@ def test_city_level_5_nova_roma(city_levels):
 def test_city_level_5_insufficient_sat(city_levels):
     """pop=2500 mais sat=0.60 < 0.65 → level 4."""
     placed = Counter({
-        "forum": 1, "temple": 1, "market": 1, "theater": 1, "baths": 1,
+        "market": 1, "forum": 1, "temple": 1, "theater": 1, "baths": 1,
         "obelisk": 1, "prefecture": 1,
     })
     assert compute_city_level(2500, 0.60, placed, city_levels) == 4
 
 
+def test_city_level_5_missing_obelisk(city_levels):
+    """pop=2500, sat=0.65, tous bâtiments sauf obelisk → level 4."""
+    placed = Counter({
+        "market": 1, "forum": 1, "temple": 1, "theater": 1, "baths": 1,
+        "prefecture": 1,
+    })
+    assert compute_city_level(2500, 0.65, placed, city_levels) == 4
+
+
 def test_city_level_multiple_same_building(city_levels):
     """Plusieurs instances du même bâtiment comptent comme présence (Counter > 0)."""
-    placed = Counter({"forum": 3})  # 3 forums
-    assert compute_city_level(200, 0.40, placed, city_levels) == 2
+    placed = Counter({"market": 3})  # 3 marchés
+    assert compute_city_level(150, 0.40, placed, city_levels) == 2
 
 
 # ---------------------------------------------------------------------------

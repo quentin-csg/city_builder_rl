@@ -252,7 +252,7 @@ def test_place_multi_resource(grid, bldg):
     result = try_place_building(grid, s, "temple", x, y, bldg)
     assert result is True
     assert s.denarii == 5000.0 - 800
-    assert s.marble == 500 - 100
+    assert s.marble == 500 - 80
 
 
 def test_place_insufficient_one_resource(grid, bldg):
@@ -321,8 +321,8 @@ def test_demolish_refund_multi(grid, bldg):
     grid.place_building("forum", x, y, bldg["forum"])
     pb = try_demolish(grid, s, x, y, bldg)
     assert pb is not None
-    assert s.denarii == 1000.0   # floor(2000 * 0.5)
-    assert s.marble == 100       # floor(200 * 0.5)
+    assert s.denarii == 750.0    # floor(1500 * 0.5)
+    assert s.marble == 75        # floor(150 * 0.5)
 
 
 # ---------------------------------------------------------------------------

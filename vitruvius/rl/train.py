@@ -24,7 +24,7 @@ from vitruvius.rl.gym_env import VitruviusEnv
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_TOTAL_TIMESTEPS: int = 3_000_000
+DEFAULT_TOTAL_TIMESTEPS: int = 10_000_000
 DEFAULT_N_ENVS: int = 8
 DEFAULT_MAX_TURNS: int = 1000
 DEFAULT_CHECKPOINT_FREQ: int = 100_000
@@ -278,8 +278,8 @@ def build_argparser() -> argparse.ArgumentParser:
     p.add_argument("--n-steps", type=int, default=2048)
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--n-epochs", type=int, default=10)
-    p.add_argument("--gamma", type=float, default=0.99)
-    p.add_argument("--ent-coef", type=float, default=0.01)
+    p.add_argument("--gamma", type=float, default=0.995)
+    p.add_argument("--ent-coef", type=float, default=0.02)
     return p
 
 

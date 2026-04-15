@@ -165,7 +165,7 @@ def test_invariants_full_early_economy(cfg):
 
 def test_invariants_spam_illegal_placements(cfg):
     """Placements illégaux répétés (ressources insuffisantes) → état cohérent."""
-    # Forum coûte 2000 denarii + 200 marbre : impossible au départ
+    # Forum coûte 1500 denarii + 150 marbre : impossible au départ (0 marbre)
     actions = [Action("place", "forum", 5, 5)] * 50
     violations = run_game(cfg, actions, seed=42)
     assert violations == [], "\n".join(violations)
@@ -272,7 +272,7 @@ def test_demolish_granary_clamps_wheat(cfg):
 def test_action_succeeded_false_on_illegal_placement(cfg):
     """Placer un bâtiment sans ressources → action_succeeded=False."""
     gs = init_game_state(cfg, seed=42)
-    # Forum coûte 2000 denarii + 200 marble, on a 800 denarii et 0 marble
+    # Forum coûte 1500 denarii + 150 marble, on a 1000 denarii et 0 marble
     result = step(gs, cfg, Action("place", "forum", 5, 5))
     assert not result.action_succeeded, "Forum sans ressources doit échouer"
     # La grille ne doit pas contenir de forum
@@ -525,19 +525,19 @@ def test_fuzz_idle_game(cfg, seed):
 # ---------------------------------------------------------------------------
 
 def test_compute_city_level_2_conditions(cfg):
-    """compute_city_level retourne 2 quand pop >= 200, sat >= 40%, forum posé."""
+    """compute_city_level retourne 2 quand pop >= 150, sat >= 40%, market posé."""
     from collections import Counter
     from vitruvius.engine.victory import compute_city_level
 
     city_levels = cfg.city_levels.city_levels
-    placed_forum = Counter({"forum": 1})
+    placed_market = Counter({"market": 1})
     placed_empty = Counter()
 
-    assert compute_city_level(200, 0.40, placed_forum, city_levels) == 2
-    assert compute_city_level(199, 0.40, placed_forum, city_levels) == 1   # pop insuffisante
-    assert compute_city_level(200, 0.39, placed_forum, city_levels) == 1   # sat insuffisante
-    assert compute_city_level(200, 0.40, placed_empty, city_levels) == 1   # pas de forum
-    assert compute_city_level(500, 1.00, placed_forum, city_levels) == 2   # niveau 3 pas atteint (pas de temple)
+    assert compute_city_level(150, 0.40, placed_market, city_levels) == 2
+    assert compute_city_level(149, 0.40, placed_market, city_levels) == 1   # pop insuffisante
+    assert compute_city_level(150, 0.39, placed_market, city_levels) == 1   # sat insuffisante
+    assert compute_city_level(150, 0.40, placed_empty, city_levels) == 1    # pas de market
+    assert compute_city_level(500, 1.00, placed_market, city_levels) == 2   # niveau 3 pas atteint (pas forum+temple)
 
 
 def test_house_reaches_level_2_with_food_and_water(cfg):

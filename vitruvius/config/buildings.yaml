@@ -129,7 +129,7 @@ buildings:
       terrain: "hill"
     production:
       resource: "marble"
-      amount: 6
+      amount: 10
     storage: null
     service: null
     special_effect: null
@@ -188,7 +188,7 @@ buildings:
     size: [3, 3]
     cost:
       denarii: 800
-      marble: 100
+      marble: 80
     maintenance: 40
     unique: false
     terrain_constraint: null
@@ -236,9 +236,9 @@ buildings:
     category: "admin"
     size: [4, 4]
     cost:
-      denarii: 2000
-      marble: 200
-    maintenance: 100
+      denarii: 1500
+      marble: 150
+    maintenance: 75
     unique: true
     terrain_constraint: null
     production: null

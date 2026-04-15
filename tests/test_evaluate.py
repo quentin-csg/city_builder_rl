@@ -73,6 +73,7 @@ def _make_untrained_model(tmp_path: Path) -> Path:
         subproc=False,
         resume=None,
         learning_rate=3e-4,
+        lr_end=1e-4,
         n_steps=64,
         batch_size=64,
         n_epochs=1,

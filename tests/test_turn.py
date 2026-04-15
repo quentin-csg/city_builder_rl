@@ -85,9 +85,9 @@ def test_init_defaults(cfg):
     assert gs.victory is False
     assert gs.houses == {}
     assert gs.active_events == []
-    assert gs.resource_state.denarii == 800.0
-    assert gs.resource_state.wheat == 200
-    assert gs.resource_state.wood == 100
+    assert gs.resource_state.denarii == 1000.0
+    assert gs.resource_state.wheat == 300
+    assert gs.resource_state.wood == 150
 
 
 def test_init_deterministic(cfg):
@@ -137,7 +137,7 @@ def test_step_place_road(cfg, gs):
     before_denarii = gs.resource_state.denarii
     step(gs, cfg, Action("place", "road", x, y))
     assert gs.grid.get_building_at(x, y) is not None
-    assert gs.resource_state.denarii < before_denarii + 20  # passive income - coût route
+    assert gs.resource_state.denarii < before_denarii + 25  # passive income - coût route
 
 
 def test_step_place_housing_creates_house_state(cfg, gs):
@@ -256,7 +256,7 @@ def test_step_forum_tax_bonus(cfg, gs):
     before_no_forum = gs.resource_state.denarii
     r_no_forum = step(gs, cfg, Action("do_nothing"))
 
-    # Placer un forum (coûte denarii=2000, marble=200)
+    # Placer un forum (coûte denarii=1500, marble=150)
     gs.resource_state.marble = 500
     gs.resource_state.denarii = 5000.0
     forum_pos = _find_plain_block(gs.grid, 4, 4)

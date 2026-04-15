@@ -11,27 +11,27 @@ city_levels:
   - level: 2
     id: "village"
     display_name: "Village"
-    min_population: 200
+    min_population: 150
     min_satisfaction: 0.40
-    required_buildings: ["forum"]
+    required_buildings: ["market"]
 
   - level: 3
     id: "town"
     display_name: "Bourg"
     min_population: 500
     min_satisfaction: 0.50
-    required_buildings: ["temple"]
+    required_buildings: ["market", "forum", "temple"]
 
   - level: 4
     id: "city"
     display_name: "Ville"
     min_population: 1500
     min_satisfaction: 0.60
-    required_buildings: ["market", "theater", "baths"]
+    required_buildings: ["market", "forum", "temple", "theater", "baths"]
 
   - level: 5
     id: "nova_roma"
     display_name: "Nova Roma"
     min_population: 2500
     min_satisfaction: 0.65
-    required_buildings: ["obelisk", "prefecture"]
+    required_buildings: ["market", "forum", "temple", "theater", "baths", "obelisk", "prefecture"]

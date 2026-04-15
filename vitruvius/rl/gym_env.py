@@ -189,36 +189,58 @@ class VitruviusEnv(gym.Env):
         def _keep(prev_val: bool, current: bool) -> bool:
             return prev_val or current
 
-        p_has_forum = prev.has_forum if prev else False
-        p_has_obelisk = prev.has_obelisk if prev else False
-        p_has_prefecture = prev.has_prefecture if prev else False
-        p_house = prev.first_house_placed if prev else False
-        p_farm = prev.first_farm_placed if prev else False
-        p_well = prev.first_well_placed if prev else False
-        p_temple = prev.first_temple_placed if prev else False
-        p_granary = prev.first_granary_placed if prev else False
-        p_market = prev.first_market_placed if prev else False
-        p_lumber = prev.first_lumber_camp_placed if prev else False
-        p_trading = prev.first_trading_post_placed if prev else False
-        p_population = prev.first_population if prev else False
+        def _p(attr: str) -> bool:
+            return getattr(prev, attr) if prev else False
 
         total_pop = sum(h.population for h in self.gs.houses.values())
+        marble = self.gs.resource_state.marble
+        max_house_level = max((h.level for h in self.gs.houses.values()), default=0)
 
         return RewardState(
             total_population=total_pop,
             city_level=self.gs.city_level,
             global_satisfaction=self.gs.global_satisfaction,
             housing_sum=sum(h.level for h in self.gs.houses.values()),
-            has_forum=_keep(p_has_forum, ids["forum"] > 0),
-            has_obelisk=_keep(p_has_obelisk, ids["obelisk"] > 0),
-            has_prefecture=_keep(p_has_prefecture, ids["prefecture"] > 0),
-            first_house_placed=_keep(p_house, len(self.gs.houses) > 0),
-            first_farm_placed=_keep(p_farm, ids["wheat_farm"] > 0),
-            first_well_placed=_keep(p_well, ids["well"] > 0),
-            first_temple_placed=_keep(p_temple, ids["temple"] > 0),
-            first_granary_placed=_keep(p_granary, ids["granary"] > 0),
-            first_market_placed=_keep(p_market, ids["market"] > 0),
-            first_lumber_camp_placed=_keep(p_lumber, ids["lumber_camp"] > 0),
-            first_trading_post_placed=_keep(p_trading, ids["trading_post"] > 0),
-            first_population=_keep(p_population, total_pop > 0),
+            total_houses=len(self.gs.houses),
+            # Bâtiments victoire
+            has_forum=_keep(_p("has_forum"), ids["forum"] > 0),
+            has_obelisk=_keep(_p("has_obelisk"), ids["obelisk"] > 0),
+            has_prefecture=_keep(_p("has_prefecture"), ids["prefecture"] > 0),
+            # Premiers placements — chaîne de base
+            first_house_placed=_keep(_p("first_house_placed"), len(self.gs.houses) > 0),
+            first_farm_placed=_keep(_p("first_farm_placed"), ids["wheat_farm"] > 0),
+            first_well_placed=_keep(_p("first_well_placed"), ids["well"] > 0),
+            first_temple_placed=_keep(_p("first_temple_placed"), ids["temple"] > 0),
+            first_granary_placed=_keep(_p("first_granary_placed"), ids["granary"] > 0),
+            first_market_placed=_keep(_p("first_market_placed"), ids["market"] > 0),
+            first_lumber_camp_placed=_keep(_p("first_lumber_camp_placed"), ids["lumber_camp"] > 0),
+            first_trading_post_placed=_keep(_p("first_trading_post_placed"), ids["trading_post"] > 0),
+            # Chaîne marbre
+            first_marble_quarry_placed=_keep(_p("first_marble_quarry_placed"), ids["marble_quarry"] > 0),
+            first_warehouse_marble_placed=_keep(_p("first_warehouse_marble_placed"), ids["warehouse_marble"] > 0),
+            # Infrastructure eau avancée
+            first_fountain_placed=_keep(_p("first_fountain_placed"), ids["fountain"] > 0),
+            first_aqueduct_placed=_keep(_p("first_aqueduct_placed"), ids["aqueduct"] > 0),
+            # Services de loisirs
+            first_theater_placed=_keep(_p("first_theater_placed"), ids["theater"] > 0),
+            first_baths_placed=_keep(_p("first_baths_placed"), ids["baths"] > 0),
+            # Première population
+            first_population=_keep(_p("first_population"), total_pop > 0),
+            # Paliers population
+            reached_pop_100=_keep(_p("reached_pop_100"), total_pop >= 100),
+            reached_pop_250=_keep(_p("reached_pop_250"), total_pop >= 250),
+            reached_pop_500=_keep(_p("reached_pop_500"), total_pop >= 500),
+            reached_pop_1000=_keep(_p("reached_pop_1000"), total_pop >= 1000),
+            reached_pop_2000=_keep(_p("reached_pop_2000"), total_pop >= 2000),
+            # Paliers évolution maisons
+            first_house_level_2=_keep(_p("first_house_level_2"), max_house_level >= 2),
+            first_house_level_3=_keep(_p("first_house_level_3"), max_house_level >= 3),
+            first_house_level_4=_keep(_p("first_house_level_4"), max_house_level >= 4),
+            first_house_level_5=_keep(_p("first_house_level_5"), max_house_level >= 5),
+            first_house_level_6=_keep(_p("first_house_level_6"), max_house_level >= 6),
+            # Paliers marbre (one-shot uniquement)
+            reached_marble_50=_keep(_p("reached_marble_50"), marble >= 50),
+            reached_marble_100=_keep(_p("reached_marble_100"), marble >= 100),
+            reached_marble_200=_keep(_p("reached_marble_200"), marble >= 200),
+            reached_marble_500=_keep(_p("reached_marble_500"), marble >= 500),
         )

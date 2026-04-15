@@ -46,9 +46,9 @@ def test_resources_count(cfg: GameConfig) -> None:
 
 def test_resources_starting_values(cfg: GameConfig) -> None:
     r = cfg.resources.resources
-    assert r["denarii"].starting_amount == 800
-    assert r["wheat"].starting_amount == 200
-    assert r["wood"].starting_amount == 100
+    assert r["denarii"].starting_amount == 1000
+    assert r["wheat"].starting_amount == 300
+    assert r["wood"].starting_amount == 150
     assert r["marble"].starting_amount == 0
 
 
@@ -61,7 +61,7 @@ def test_resources_storage(cfg: GameConfig) -> None:
 
 
 def test_passive_income(cfg: GameConfig) -> None:
-    assert cfg.resources.passive_income.denarii == 20
+    assert cfg.resources.passive_income.denarii == 25
 
 
 # ---------------------------------------------------------------------------
@@ -87,9 +87,9 @@ def test_building_sizes(cfg: GameConfig) -> None:
 
 def test_building_costs(cfg: GameConfig) -> None:
     b = cfg.buildings.buildings
-    assert b["temple"].cost == {"denarii": 800, "marble": 100}
+    assert b["temple"].cost == {"denarii": 800, "marble": 80}
     assert b["housing"].cost == {"wood": 10}
-    assert b["forum"].cost == {"denarii": 2000, "marble": 200}
+    assert b["forum"].cost == {"denarii": 1500, "marble": 150}
     assert b["obelisk"].cost == {"denarii": 1000, "marble": 500}
 
 

@@ -43,11 +43,12 @@ def _smoke_args(tmp_path: Path) -> argparse.Namespace:
         subproc=False,
         resume=None,
         learning_rate=3e-4,
+        lr_end=1e-4,
         n_steps=64,
         batch_size=64,
         n_epochs=1,
-        gamma=0.99,
-        ent_coef=0.01,
+        gamma=0.995,
+        ent_coef=0.02,
     )
 
 
@@ -177,8 +178,8 @@ class TestArgparser:
         assert args.n_steps == 2048
         assert args.batch_size == 256
         assert args.n_epochs == 10
-        assert abs(args.gamma - 0.99) < 1e-10
-        assert abs(args.ent_coef - 0.01) < 1e-10
+        assert abs(args.gamma - 0.995) < 1e-10
+        assert abs(args.ent_coef - 0.02) < 1e-10
 
     def test_override_timesteps(self) -> None:
         p = build_argparser()

@@ -171,7 +171,7 @@ def test_obs_global_features_initial(cfg, building_index_map):
     obs = build_observation(gs_fresh, cfg, building_index_map)
     gf = obs["global_features"]
 
-    assert gf[0] == pytest.approx(800.0 / 10_000.0, abs=1e-4)  # denarii
+    assert gf[0] == pytest.approx(1000.0 / 10_000.0, abs=1e-4)  # denarii
     assert gf[5] == pytest.approx(0.5, abs=1e-4)               # satisfaction
     assert gf[6] == pytest.approx(0.2, abs=1e-4)               # city_level/5
     assert gf[7] == pytest.approx(0.0, abs=1e-4)               # turn
