@@ -114,7 +114,7 @@ def test_reward_survival_only():
 
 
 def test_reward_delta_pop_positive():
-    """+100 pop → contribution W_POP * 1.0."""
+    """+100 pop → contribution W_POP=8.0 * 1.0."""
     prev = same_state(pop=0)
     curr = same_state(pop=100)
     result = neutral_result()
@@ -122,7 +122,7 @@ def test_reward_delta_pop_positive():
 
 
 def test_reward_delta_pop_negative():
-    """-50 pop → contribution W_POP * -0.5."""
+    """-50 pop → contribution W_POP=8.0 * -0.5."""
     prev = same_state(pop=100)
     curr = same_state(pop=50)
     result = neutral_result()
@@ -188,7 +188,7 @@ def test_reward_bankrupt_penalty():
 
 
 def test_reward_famine_penalty_proportional():
-    """`famine_count > 0` avec total_houses → pénalité W_FAMINE * ratio."""
+    """`famine_count > 0` avec total_houses → pénalité W_FAMINE=-0.1 * ratio."""
     prev = same_state()
     curr = same_state(total_houses=10)
     result = neutral_result(famine_count=5)
@@ -197,7 +197,7 @@ def test_reward_famine_penalty_proportional():
 
 
 def test_reward_famine_penalty_full():
-    """Toutes les maisons en famine → pénalité W_FAMINE * 1.0."""
+    """Toutes les maisons en famine → pénalité W_FAMINE=-0.1 * 1.0."""
     prev = same_state()
     curr = same_state(total_houses=8)
     result = neutral_result(famine_count=8)
@@ -625,6 +625,6 @@ def test_reward_city_level_rewards_constants():
     assert CITY_LEVEL_REWARDS[5] == pytest.approx(100.0)
 
 
-def test_reward_survival_is_zero():
-    """W_SURVIVAL vaut 0.0 — n'encourage pas les actions neutres."""
-    assert W_SURVIVAL == pytest.approx(0.0)
+def test_reward_survival_baseline():
+    """W_SURVIVAL vaut 0.01 — baseline positif indispensable à l'exploration."""
+    assert W_SURVIVAL == pytest.approx(0.01)

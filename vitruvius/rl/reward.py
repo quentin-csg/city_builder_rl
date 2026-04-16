@@ -66,16 +66,16 @@ class RewardState:
 # Coefficients continus
 # ---------------------------------------------------------------------------
 
-W_POP: float = 5.0        # par tranche de 100 hab gagnés (réduit car milestones guident)
-W_SAT: float = 3.0        # par point de satisfaction gagné (0–1)
-W_HOUSING: float = 2.0    # par tranche de 10 niveaux de maison gagnés
-W_BANKRUPT: float = -0.3
-W_FAMINE: float = -0.3    # × famine_ratio (proportionnel, pas binaire)
+W_POP: float = 8.0        # par tranche de 100 hab gagnés
+W_SAT: float = 2.0        # par point de satisfaction gagné (0–1)
+W_HOUSING: float = 1.0    # par tranche de 10 niveaux de maison gagnés
+W_BANKRUPT: float = -0.15
+W_FAMINE: float = -0.1    # × famine_ratio (proportionnel, atténué vs binaire)
 W_EXODUS: float = -0.1
-W_POSITIVE_INCOME: float = 0.15  # bonus si taxes+passif > maintenance
-W_VICTORY: float = 200.0
-W_DEFEAT: float = -30.0
-W_SURVIVAL: float = 0.0  # supprimé : évite le plateau DO_NOTHING
+W_POSITIVE_INCOME: float = 0.05  # bonus si taxes+passif > maintenance
+W_VICTORY: float = 100.0
+W_DEFEAT: float = -10.0
+W_SURVIVAL: float = 0.01  # baseline positif indispensable à l'exploration
 
 # Reward par niveau de ville (remplace W_LEVEL plat — progression exponentielle)
 CITY_LEVEL_REWARDS: dict[int, float] = {

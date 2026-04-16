@@ -82,11 +82,11 @@ def test_env_step_do_nothing_advances_turn(env):
 
 
 def test_env_step_reward_survival(env):
-    """DO_NOTHING sur grille vide → pas de delta, mais W_POSITIVE_INCOME car passif > maintenance."""
+    """DO_NOTHING sur grille vide → pas de delta, mais W_POSITIVE_INCOME + W_SURVIVAL."""
     _, reward, terminated, truncated, _ = env.step(DO_NOTHING)
     if not terminated:
-        # passif 25 > maintenance 0 → bonus W_POSITIVE_INCOME = 0.15
-        assert reward == pytest.approx(0.15, abs=1e-6)
+        # passif 25 > maintenance 0 → W_POSITIVE_INCOME=0.05 + W_SURVIVAL=0.01 = 0.06
+        assert reward == pytest.approx(0.06, abs=1e-6)
 
 
 def test_env_reward_determinism(cfg):

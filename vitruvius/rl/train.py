@@ -279,7 +279,7 @@ def build_argparser() -> argparse.ArgumentParser:
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--n-epochs", type=int, default=10)
     p.add_argument("--gamma", type=float, default=0.995)
-    p.add_argument("--ent-coef", type=float, default=0.02)
+    p.add_argument("--ent-coef", type=float, default=0.01)
     return p
 
 
